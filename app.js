@@ -140,3 +140,16 @@ async function saveDamageMechanisms() {
 
 // Auto load equipment on page open
 window.onload = loadEquipment;
+
+// ▶ Run RBI for all equipment (call SQL function)
+async function runRBI() {
+  const { data, error } = await supabase
+    .rpc("generate_rbi_for_all");
+
+  if (error) {
+    alert(error.message);
+  } else {
+    alert("RBI calculation completed");
+    loadRbiDashboard();
+  }
+}
