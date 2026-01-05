@@ -197,3 +197,65 @@ async function loadRbiDashboard() {
 
 // Auto load on page open
 window.onload = loadRbiDashboard;
+
+
+// Load Equipment
+async function loadCCD() {
+
+  // Equipment
+  const { data: eq } = await supabase
+    .from("equipment")
+    .select("id, tag_no, equipment_type, service, material");
+
+  const eqTable = document.getElementById("eqTable");
+  eq.forEach(e => {
+    eqTable.innerHTML += `
+      <tr>
+        <td>${e.tag_no}</td>
+        <td>${e.equipment_type}</td>
+        <td>${e.service}</td>
+        <td>${e.material}</td>
+      </tr>`;
+  });
+
+  // Damage Mechanisms
+  const { data: dm } = await supabase
+    .from("equipment_dm")
+    .select(`
+      justification,
+      equipment ( tag_no ),
+      damage_mechanisms ( name )
+    `);
+
+  const dmTable = document.getElementById("dmTable");
+  dm.forEach(d => {
+    dmTable.innerHTML += `
+      <tr>
+        <td>${d.equipment.tag_no}</td>
+        <td>${d.damage_mechanisms.name}</td>
+        <td>${d.justification}</td>
+      </tr>`;
+  });
+
+  // RBI Summary
+  const { data: rbi } = await supabase
+    .from("rbi_results")
+    .select(`
+      pof, cof, risk, next_inspection_year,
+      equipment ( tag_no )
+    `);
+
+  const rbiTable = document.getElementById("rbiTable");
+  rbi.forEach(r => {
+    rbiTable.innerHTML += `
+      <tr>
+        <td>${r.equipment.tag_no}</td>
+        <td>${r.pof}</td>
+        <td>${r.cof}</td>
+        <td>${r.risk}</td>
+        <td>${r.next_inspection_year}</td>
+      </tr>`;
+  });
+}
+
+window.onload = loadCCD;
