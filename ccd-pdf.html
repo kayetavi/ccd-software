@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Corrosion Control Document</title>
+  <style>
+    body { font-family: Arial; margin: 40px; }
+    h1, h2 { text-align: center; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    th, td { border: 1px solid black; padding: 6px; font-size: 12px; }
+    th { background: #f0f0f0; }
+  </style>
+</head>
+<body>
+
+<h1>CORROSION CONTROL DOCUMENT (CCD)</h1>
+<h2>Hydrocracker Unit (HCU)</h2>
+
+<h3>1. Scope & Basis</h3>
+<p>
+This Corrosion Control Document is prepared as per API 571 and API 580
+to support RBI study and inspection planning.
+</p>
+
+<h3>2. Equipment List</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Tag No</th>
+      <th>Type</th>
+      <th>Service</th>
+      <th>Material</th>
+    </tr>
+  </thead>
+  <tbody id="eqTable"></tbody>
+</table>
+
+<h3>3. Damage Mechanism Review</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Tag No</th>
+      <th>Damage Mechanism</th>
+      <th>Justification</th>
+    </tr>
+  </thead>
+  <tbody id="dmTable"></tbody>
+</table>
+
+<h3>4. RBI Summary</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Tag No</th>
+      <th>PoF</th>
+      <th>CoF</th>
+      <th>Risk</th>
+      <th>Inspection Interval (Years)</th>
+    </tr>
+  </thead>
+  <tbody id="rbiTable"></tbody>
+</table>
+
+<button onclick="window.print()">Download PDF</button>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
