@@ -1,3 +1,4 @@
+alert("project.js loaded");
 import { supabase } from './supabase.js';
 
 window.saveProject = async function () {
