@@ -4,6 +4,7 @@
   <title>CCD Login</title>
 </head>
 <body>
+
   <h2>CCD Software Login</h2>
 
   <input type="email" id="email" placeholder="Email"><br><br>
@@ -11,7 +12,11 @@
 
   <button onclick="login()">Login</button>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <!-- ✅ FIXED: Supabase v2 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- App JS -->
   <script src="app.js"></script>
+
 </body>
 </html>
