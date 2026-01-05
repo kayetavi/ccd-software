@@ -4,9 +4,17 @@ window.saveProject = async function () {
   const project = document.getElementById("project").value;
   const plant = document.getElementById("plant").value;
 
-  await supabase.from("projects").insert([
-    { project_name: project, plant_name: plant }
-  ]);
+  const { data, error } = await supabase
+    .from("projects")
+    .insert([
+      { project_name: project, plant_name: plant }
+    ]);
 
-  alert("Project Created");
+  if (error) {
+    alert("❌ ERROR: " + error.message);
+    console.error("Supabase Error:", error);
+  } else {
+    alert("✅ Project Created Successfully");
+    console.log("Inserted:", data);
+  }
 };
