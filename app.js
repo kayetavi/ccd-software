@@ -1,10 +1,19 @@
-// 🔑 Replace with your Supabase keys
+// ===============================
+// SUPABASE CONFIG (FIXED)
+// ===============================
 const supabaseUrl = "https://apmmvovefgywogzcnvmr.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwbW12b3ZlZmd5d29nemNudm1yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNDA4ODQsImV4cCI6MjA4MjkxNjg4NH0.B0KRW0-OoV_11E_ism4_3xwusP85syna3UMy3kZy3gU";
+const supabaseKey =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwbW12b3ZlZmd5d29nemNudm1yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNDA4ODQsImV4cCI6MjA4MjkxNjg4NH0.B0KRW0-OoV_11E_ism4_3xwusP85syna3UMy3kZy3gU";
 
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+// ⚠️ IMPORTANT FIX
+const supabase = window.supabase.createClient(
+  supabaseUrl,
+  supabaseKey
+);
 
-// 🔐 LOGIN
+// ===============================
+// LOGIN
+// ===============================
 async function login() {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
@@ -15,13 +24,16 @@ async function login() {
   });
 
   if (error) {
-    alert(error.message);
+    alert("Login failed: " + error.message);
   } else {
+    alert("Login successful ✅");
     window.location.href = "equipment.html";
   }
 }
 
-// 🏭 ADD EQUIPMENT (CCD STEP-1)
+// ===============================
+// EQUIPMENT (CCD STEP-1)
+// ===============================
 async function addEquipment() {
   const data = {
     tag_no: document.getElementById("tag").value,
@@ -38,14 +50,15 @@ async function addEquipment() {
     .insert([data]);
 
   if (error) {
-    document.getElementById("msg").innerText = error.message;
+    alert(error.message);
   } else {
-    document.getElementById("msg").innerText =
-      "Equipment saved successfully (CCD updated)";
+    alert("Equipment saved (CCD updated) ✅");
   }
 }
 
-// 🔄 Load Equipment List
+// ===============================
+// LOAD EQUIPMENT
+// ===============================
 async function loadEquipment() {
   const { data, error } = await supabase
     .from("equipment")
@@ -57,8 +70,9 @@ async function loadEquipment() {
   }
 
   const select = document.getElementById("equipmentSelect");
-  select.innerHTML = "";
+  if (!select) return;
 
+  select.innerHTML = "";
   data.forEach(eq => {
     const opt = document.createElement("option");
     opt.value = eq.id;
@@ -70,16 +84,19 @@ async function loadEquipment() {
   });
 }
 
-// 🔍 Auto Damage Mechanism Suggestion
+// ===============================
+// DAMAGE MECHANISM LOGIC
+// ===============================
 async function loadDamageMechanisms() {
   const select = document.getElementById("equipmentSelect");
-  const option = select.options[select.selectedIndex];
+  if (!select) return;
 
+  const option = select.options[select.selectedIndex];
   const material = option.dataset.material;
   const temp = parseFloat(option.dataset.temp);
   const insulated = option.dataset.insulated === "true";
 
-  let { data, error } = await supabase
+  const { data, error } = await supabase
     .from("damage_mechanisms")
     .select("*")
     .lte("temp_min", temp)
@@ -99,163 +116,33 @@ async function loadDamageMechanisms() {
       dm.material === "All" ||
       (dm.name === "CUI" && insulated)
     ) {
-      const div = document.createElement("div");
-      div.innerHTML = `
-        <input type="checkbox" id="${dm.id}">
-        <b>${dm.name}</b> (${dm.dm_type})<br>
-        <textarea id="j_${dm.id}" placeholder="Justification"></textarea><br><br>
+      container.innerHTML += `
+        <div>
+          <input type="checkbox" id="${dm.id}">
+          <b>${dm.name}</b> (${dm.dm_type})<br>
+          <textarea id="j_${dm.id}" placeholder="Justification"></textarea>
+        </div><br>
       `;
-      container.appendChild(div);
     }
   });
-
-  const btn = document.createElement("button");
-  btn.innerText = "Save to CCD";
-  btn.onclick = saveDamageMechanisms;
-  container.appendChild(btn);
 }
 
-// 💾 Save Accepted Damage Mechanisms
+// ===============================
+// SAVE DAMAGE MECHANISMS
+// ===============================
 async function saveDamageMechanisms() {
   const equipId = document.getElementById("equipmentSelect").value;
+  const checks = document.querySelectorAll("#dmList input[type=checkbox]");
 
-  const checkboxes = document.querySelectorAll("#dmList input[type=checkbox]");
-  for (let cb of checkboxes) {
+  for (let cb of checks) {
     if (cb.checked) {
-      const justification =
-        document.getElementById("j_" + cb.id).value;
-
-      await supabase.from("equipment_dm").insert([
-        {
-          equipment_id: equipId,
-          damage_mechanism_id: cb.id,
-          justification: justification
-        }
-      ]);
+      await supabase.from("equipment_dm").insert([{
+        equipment_id: equipId,
+        damage_mechanism_id: cb.id,
+        justification: document.getElementById("j_" + cb.id).value
+      }]);
     }
   }
 
-  alert("Damage Mechanisms saved (CCD updated)");
+  alert("Damage mechanisms saved (CCD updated) ✅");
 }
-
-// Auto load equipment on page open
-window.onload = loadEquipment;
-
-// ▶ Run RBI for all equipment (call SQL function)
-async function runRBI() {
-  const { data, error } = await supabase
-    .rpc("generate_rbi_for_all");
-
-  if (error) {
-    alert(error.message);
-  } else {
-    alert("RBI calculation completed");
-    loadRbiDashboard();
-  }
-}
-
-// 📊 Load RBI Dashboard
-async function loadRbiDashboard() {
-  const { data, error } = await supabase
-    .from("rbi_results")
-    .select(`
-      pof,
-      cof,
-      risk,
-      next_inspection_year,
-      equipment ( tag_no )
-    `);
-
-  if (error) {
-    alert(error.message);
-    return;
-  }
-
-  document.getElementById("highRisk").innerHTML = "";
-  document.getElementById("mediumRisk").innerHTML = "";
-  document.getElementById("lowRisk").innerHTML = "";
-
-  data.forEach(r => {
-    const row = `
-      <tr>
-        <td>${r.equipment.tag_no}</td>
-        <td>${r.pof}</td>
-        <td>${r.cof}</td>
-        <td>${r.risk}</td>
-        <td>${r.next_inspection_year}</td>
-      </tr>
-    `;
-
-    if (r.risk === "High")
-      document.getElementById("highRisk").innerHTML += row;
-    else if (r.risk === "Medium")
-      document.getElementById("mediumRisk").innerHTML += row;
-    else
-      document.getElementById("lowRisk").innerHTML += row;
-  });
-}
-
-// Auto load on page open
-window.onload = loadRbiDashboard;
-
-
-// Load Equipment
-async function loadCCD() {
-
-  // Equipment
-  const { data: eq } = await supabase
-    .from("equipment")
-    .select("id, tag_no, equipment_type, service, material");
-
-  const eqTable = document.getElementById("eqTable");
-  eq.forEach(e => {
-    eqTable.innerHTML += `
-      <tr>
-        <td>${e.tag_no}</td>
-        <td>${e.equipment_type}</td>
-        <td>${e.service}</td>
-        <td>${e.material}</td>
-      </tr>`;
-  });
-
-  // Damage Mechanisms
-  const { data: dm } = await supabase
-    .from("equipment_dm")
-    .select(`
-      justification,
-      equipment ( tag_no ),
-      damage_mechanisms ( name )
-    `);
-
-  const dmTable = document.getElementById("dmTable");
-  dm.forEach(d => {
-    dmTable.innerHTML += `
-      <tr>
-        <td>${d.equipment.tag_no}</td>
-        <td>${d.damage_mechanisms.name}</td>
-        <td>${d.justification}</td>
-      </tr>`;
-  });
-
-  // RBI Summary
-  const { data: rbi } = await supabase
-    .from("rbi_results")
-    .select(`
-      pof, cof, risk, next_inspection_year,
-      equipment ( tag_no )
-    `);
-
-  const rbiTable = document.getElementById("rbiTable");
-  rbi.forEach(r => {
-    rbiTable.innerHTML += `
-      <tr>
-        <td>${r.equipment.tag_no}</td>
-        <td>${r.pof}</td>
-        <td>${r.cof}</td>
-        <td>${r.risk}</td>
-        <td>${r.next_inspection_year}</td>
-      </tr>`;
-  });
-}
-
-window.onload = loadCCD;
