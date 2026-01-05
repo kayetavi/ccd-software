@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Equipment Entry - CCD</title>
+</head>
+<body>
+  <h2>Equipment Master</h2>
+
+  <input id="tag" placeholder="Tag No"><br><br>
+  <input id="type" placeholder="Equipment Type"><br><br>
+  <input id="service" placeholder="Service"><br><br>
+  <input id="material" placeholder="Material"><br><br>
+  <input id="temp" placeholder="Design Temp (°C)" type="number"><br><br>
+  <input id="pressure" placeholder="Design Pressure" type="number"><br><br>
+
+  Insulated:
+  <select id="insulated">
+    <option value="true">Yes</option>
+    <option value="false">No</option>
+  </select><br><br>
+
+  <button onclick="addEquipment()">Save Equipment</button>
+
+  <p id="msg"></p>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
