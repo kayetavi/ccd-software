@@ -4,6 +4,7 @@
   <title>Equipment Entry - CCD</title>
 </head>
 <body>
+
   <h2>Equipment Master</h2>
 
   <input id="tag" placeholder="Tag No"><br><br>
@@ -23,7 +24,18 @@
 
   <p id="msg"></p>
 
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <!-- App JS -->
   <script src="app.js"></script>
+
+  <!-- Page load safe call -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // optional: future use
+      console.log("Equipment page loaded");
+    });
+  </script>
+
 </body>
 </html>
