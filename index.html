@@ -1,53 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>CCD Login</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CCD Maker – API 970</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+  <h1>CCD Maker Software</h1>
 
-  <h2>CCD Software Login</h2>
-
-  <input id="email" type="email" placeholder="Email"><br><br>
-  <input id="password" type="password" placeholder="Password"><br><br>
-
-  <button id="loginBtn">Login</button>
-
-  <!-- Supabase v2 -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <script>
-    // ✅ Supabase client
-    const supabase = window.supabase.createClient(
-      "https://apmmvovefgywogzcnvmr.supabase.co",
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwbW12b3ZlZmd5d29nemNudm1yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNDA4ODQsImV4cCI6MjA4MjkxNjg4NH0.B0KRW0-OoV_11E_ism4_3xwusP85syna3UMy3kZy3gU"
-    );
-
-    // ✅ Login handler
-    document.getElementById("loginBtn").addEventListener("click", async () => {
-
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value.trim();
-
-      if (!email || !password) {
-        alert("Email aur Password dono daalo");
-        return;
-      }
-
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) {
-        alert("LOGIN FAILED ❌\n" + error.message);
-      } else {
-        alert("LOGIN SUCCESS ✅");
-        // next page
-        // window.location.href = "equipment.html";
-      }
-    });
-  </script>
-
+  <a href="project.html">➕ Create / Select Project</a><br><br>
+  <a href="loops.html">🔁 Corrosion Loops</a><br><br>
+  <a href="ccd-report.html">📄 CCD Report</a>
 </body>
 </html>
