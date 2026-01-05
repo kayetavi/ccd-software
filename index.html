@@ -7,16 +7,42 @@
 
   <h2>CCD Software Login</h2>
 
-  <input type="email" id="email" placeholder="Email"><br><br>
-  <input type="password" id="password" placeholder="Password"><br><br>
+  <input id="email" placeholder="Email"><br><br>
+  <input id="password" type="password" placeholder="Password"><br><br>
 
-  <button onclick="login()">Login</button>
+  <button id="loginBtn">Login</button>
 
-  <!-- ✅ FIXED: Supabase v2 CDN -->
+  <!-- MUST: v2 CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <!-- App JS -->
-  <script src="app.js"></script>
+  <script>
+    // 🔴 INLINE TEST CODE (NO app.js)
+    const supabaseUrl = "https://apmmvovefgywogzcnvmr.supabase.co";
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwbW12b3ZlZmd5d29nemNudm1yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNDA4ODQsImV4cCI6MjA4MjkxNjg4NH0.B0KRW0-OoV_11E_ism4_3xwusP85syna3UMy3kZy3gU";
+
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+    document.getElementById("loginBtn").onclick = async () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      console.log("LOGIN CLICKED", email);
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      console.log("DATA:", data);
+      console.log("ERROR:", error);
+
+      if (error) {
+        alert("LOGIN FAILED: " + error.message);
+      } else {
+        alert("LOGIN SUCCESS ✅");
+      }
+    };
+  </script>
 
 </body>
 </html>
