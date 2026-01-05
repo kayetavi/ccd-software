@@ -153,3 +153,47 @@ async function runRBI() {
     loadRbiDashboard();
   }
 }
+
+// 📊 Load RBI Dashboard
+async function loadRbiDashboard() {
+  const { data, error } = await supabase
+    .from("rbi_results")
+    .select(`
+      pof,
+      cof,
+      risk,
+      next_inspection_year,
+      equipment ( tag_no )
+    `);
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  document.getElementById("highRisk").innerHTML = "";
+  document.getElementById("mediumRisk").innerHTML = "";
+  document.getElementById("lowRisk").innerHTML = "";
+
+  data.forEach(r => {
+    const row = `
+      <tr>
+        <td>${r.equipment.tag_no}</td>
+        <td>${r.pof}</td>
+        <td>${r.cof}</td>
+        <td>${r.risk}</td>
+        <td>${r.next_inspection_year}</td>
+      </tr>
+    `;
+
+    if (r.risk === "High")
+      document.getElementById("highRisk").innerHTML += row;
+    else if (r.risk === "Medium")
+      document.getElementById("mediumRisk").innerHTML += row;
+    else
+      document.getElementById("lowRisk").innerHTML += row;
+  });
+}
+
+// Auto load on page open
+window.onload = loadRbiDashboard;
