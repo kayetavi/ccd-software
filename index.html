@@ -2,18 +2,18 @@
 <html>
 <head>
   <title>CCD Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
 
   <h2>CCD Software Login</h2>
 
-  <input id="email" placeholder="Email"><br><br>
+  <input id="email" type="email" placeholder="Email"><br><br>
   <input id="password" type="password" placeholder="Password"><br><br>
 
-  <!-- ✅ Correct button with ID -->
   <button id="loginBtn">Login</button>
 
-  <!-- ✅ Supabase v2 CDN -->
+  <!-- Supabase v2 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
@@ -23,13 +23,16 @@
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwbW12b3ZlZmd5d29nemNudm1yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNDA4ODQsImV4cCI6MjA4MjkxNjg4NH0.B0KRW0-OoV_11E_ism4_3xwusP85syna3UMy3kZy3gU"
     );
 
-    // ✅ Attach click handler
+    // ✅ Login handler
     document.getElementById("loginBtn").addEventListener("click", async () => {
 
-      alert("LOGIN BUTTON CLICKED"); // 👈 confirm trigger
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
 
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
+      if (!email || !password) {
+        alert("Email aur Password dono daalo");
+        return;
+      }
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -40,7 +43,8 @@
         alert("LOGIN FAILED ❌\n" + error.message);
       } else {
         alert("LOGIN SUCCESS ✅");
-        // window.location.href = "equipment.html"; // later
+        // next page
+        // window.location.href = "equipment.html";
       }
     });
   </script>
