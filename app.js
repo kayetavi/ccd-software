@@ -44,3 +44,99 @@ async function addEquipment() {
       "Equipment saved successfully (CCD updated)";
   }
 }
+
+// 🔄 Load Equipment List
+async function loadEquipment() {
+  const { data, error } = await supabase
+    .from("equipment")
+    .select("id, tag_no, material, design_temp, insulated");
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  const select = document.getElementById("equipmentSelect");
+  select.innerHTML = "";
+
+  data.forEach(eq => {
+    const opt = document.createElement("option");
+    opt.value = eq.id;
+    opt.text = eq.tag_no;
+    opt.dataset.material = eq.material;
+    opt.dataset.temp = eq.design_temp;
+    opt.dataset.insulated = eq.insulated;
+    select.appendChild(opt);
+  });
+}
+
+// 🔍 Auto Damage Mechanism Suggestion
+async function loadDamageMechanisms() {
+  const select = document.getElementById("equipmentSelect");
+  const option = select.options[select.selectedIndex];
+
+  const material = option.dataset.material;
+  const temp = parseFloat(option.dataset.temp);
+  const insulated = option.dataset.insulated === "true";
+
+  let { data, error } = await supabase
+    .from("damage_mechanisms")
+    .select("*")
+    .lte("temp_min", temp)
+    .gte("temp_max", temp);
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  const container = document.getElementById("dmList");
+  container.innerHTML = "";
+
+  data.forEach(dm => {
+    if (
+      dm.material === material ||
+      dm.material === "All" ||
+      (dm.name === "CUI" && insulated)
+    ) {
+      const div = document.createElement("div");
+      div.innerHTML = `
+        <input type="checkbox" id="${dm.id}">
+        <b>${dm.name}</b> (${dm.dm_type})<br>
+        <textarea id="j_${dm.id}" placeholder="Justification"></textarea><br><br>
+      `;
+      container.appendChild(div);
+    }
+  });
+
+  const btn = document.createElement("button");
+  btn.innerText = "Save to CCD";
+  btn.onclick = saveDamageMechanisms;
+  container.appendChild(btn);
+}
+
+// 💾 Save Accepted Damage Mechanisms
+async function saveDamageMechanisms() {
+  const equipId = document.getElementById("equipmentSelect").value;
+
+  const checkboxes = document.querySelectorAll("#dmList input[type=checkbox]");
+  for (let cb of checkboxes) {
+    if (cb.checked) {
+      const justification =
+        document.getElementById("j_" + cb.id).value;
+
+      await supabase.from("equipment_dm").insert([
+        {
+          equipment_id: equipId,
+          damage_mechanism_id: cb.id,
+          justification: justification
+        }
+      ]);
+    }
+  }
+
+  alert("Damage Mechanisms saved (CCD updated)");
+}
+
+// Auto load equipment on page open
+window.onload = loadEquipment;
