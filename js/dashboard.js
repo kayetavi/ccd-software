@@ -182,9 +182,9 @@ window.showReportSection = () => {
 };
 
 /* ===============================
-   TAB NAVIGATION (SINGLE DASHBOARD)
+   TAB NAVIGATION (AUTO + MANUAL)
 ================================ */
-window.openTab = (sectionId) => {
+window.openTab = (sectionId, btn = null) => {
 
   const sections = [
     "projectSection",
@@ -194,22 +194,32 @@ window.openTab = (sectionId) => {
     "reportSection"
   ];
 
-  // hide all sections
+  /* hide all sections */
   sections.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = "none";
   });
 
-  // show selected section
-  const active = document.getElementById(sectionId);
-  if (active) active.style.display = "block";
+  /* show active section */
+  const activeSection = document.getElementById(sectionId);
+  if (activeSection) {
+    activeSection.style.display = "block";
+    activeSection.scrollIntoView({ behavior: "smooth" });
+  }
 
-  // active tab highlight
-  document.querySelectorAll(".tab").forEach(btn =>
-    btn.classList.remove("active")
+  /* reset tab highlight */
+  document.querySelectorAll(".tab").forEach(tab =>
+    tab.classList.remove("active")
   );
 
-  if (event?.target) {
-    event.target.classList.add("active");
+  /* highlight correct tab */
+  if (btn) {
+    btn.classList.add("active");
+  } else {
+    // 🔥 auto-detect tab using sectionId
+    const autoTab = document.querySelector(
+      `.tab[data-target="${sectionId}"]`
+    );
+    if (autoTab) autoTab.classList.add("active");
   }
 };
