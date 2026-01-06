@@ -1,52 +1,58 @@
-import { supabase } from "./supabase.js";
+import { supabase } from './supabase.js';
 
-/* LOAD CIRCUITS */
-async function loadCircuits() {
+let activeCircuitId = null;
+
+/* ===============================
+   LOAD DAMAGE MECHANISMS MASTER
+================================ */
+async function loadDamageMechanisms() {
   const { data } = await supabase
-    .from("circuits")
-    .select("id, circuit_name");
+    .from('damage_mechanisms_master')
+    .select('*')
+    .order('name');
 
-  const sel = document.getElementById("circuitSelect");
-  sel.innerHTML = `<option value="">Select Circuit</option>`;
+  const div = document.getElementById("damageList");
+  div.innerHTML = "";
 
-  data.forEach(c => {
-    const o = document.createElement("option"); 
-    o.value = c.id;
-    o.textContent = c.circuit_name;
-    sel.appendChild(o);
-  });
-}
-
-/* LOAD DAMAGE */
-async function loadDamage(cid) {
-  const { data, error } = await supabase
-    .from("circuit_damage_mechanisms")
-    .select("*")
-    .eq("circuit_id", cid);
-
-  if (error) {
-    console.error(error);
-    return;
-  }
-
-  const tbody = document.getElementById("damageTable");
-  tbody.innerHTML = "";
-
-  data.forEach(d => {
-    tbody.innerHTML += `
-      <tr>
-        <td>${d.damage_mechanism}</td>
-        <td>${d.likelihood}</td>
-        <td>${d.inspection_focus}</td>
-        <td>${d.api_reference}</td>
-      </tr>
+  data.forEach(dm => {
+    div.innerHTML += `
+      <label>
+        <input type="checkbox"
+          onchange="toggleDamage('${dm.id}', this.checked)">
+        <b>${dm.name}</b>
+        <small>(${dm.api_reference})</small>
+      </label><br>
     `;
   });
 }
 
-document.getElementById("circuitSelect")
-  .addEventListener("change", e => {
-    if (e.target.value) loadDamage(e.target.value);
-  });
+/* ===============================
+   SELECT CIRCUIT
+================================ */
+window.selectCircuit = async (circuitId) => {
+  activeCircuitId = circuitId;
+  loadDamageMechanisms();
+};
 
-loadCircuits();
+/* ===============================
+   ADD / REMOVE DAMAGE
+================================ */
+window.toggleDamage = async (damageId, checked) => {
+  if (!activeCircuitId) {
+    alert("Select a circuit first");
+    return;
+  }
+
+  if (checked) {
+    await supabase.from('circuit_damage_map').insert({
+      circuit_id: activeCircuitId,
+      damage_mechanism_id: damageId
+    });
+  } else {
+    await supabase
+      .from('circuit_damage_map')
+      .delete()
+      .eq('circuit_id', activeCircuitId)
+      .eq('damage_mechanism_id', damageId);
+  }
+};
