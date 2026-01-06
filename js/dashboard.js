@@ -180,3 +180,36 @@ window.showReportSection = () => {
     report.style.display = "block";
   }
 };
+
+/* ===============================
+   TAB NAVIGATION (SINGLE DASHBOARD)
+================================ */
+window.openTab = (sectionId) => {
+
+  const sections = [
+    "projectSection",
+    "loopSection",
+    "circuitSection",
+    "damageSection",
+    "reportSection"
+  ];
+
+  // hide all sections
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = "none";
+  });
+
+  // show selected section
+  const active = document.getElementById(sectionId);
+  if (active) active.style.display = "block";
+
+  // active tab highlight
+  document.querySelectorAll(".tab").forEach(btn =>
+    btn.classList.remove("active")
+  );
+
+  if (event?.target) {
+    event.target.classList.add("active");
+  }
+};
