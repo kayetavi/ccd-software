@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CCD – Circuit Damage Mechanisms</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<h2>Circuit Details</h2>
+
+<div class="box">
+  <h3>Add Circuit</h3>
+  <input id="circuitName" placeholder="Circuit Name (e.g. 04-P-LC-01)">
+  <input id="material" placeholder="Material (e.g. CS)">
+  <input id="temp" placeholder="Operating Temp (°C)">
+  <input id="pressure" placeholder="Operating Pressure (bar)">
+  <button onclick="addCircuit()">Add Circuit</button>
+</div>
+
+<hr>
+
+<h3>Circuits</h3>
+<div id="circuits"></div>
+
+<hr>
+
+<h3>Damage Mechanisms (Select per Circuit)</h3>
+<div id="damageList">
+  <i>Select a circuit to assign damage mechanisms</i>
+</div>
+
+<script type="module" src="js/circuits.js"></script>
+<script type="module" src="js/damage.js"></script>
+</body>
+</html>
