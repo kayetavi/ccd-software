@@ -14,23 +14,27 @@ window.selectCircuitForDamage = async (circuitId) => {
 
   activeCircuitId = circuitId;
 
+  // 🔥 SHOW DAMAGE SECTION
+  const section = document.getElementById("damageSection");
+  if (section) section.style.display = "block";
+
   const div = document.getElementById("damageList");
   if (!div) {
     alert("damageList div missing in HTML");
     return;
   }
 
-  // 🔥 FORCE SHOW DAMAGE SECTION
-  const section = document.getElementById("damageSection");
-  if (section) section.style.display = "block";
-
   div.innerHTML = `
     <b>Damage Mechanisms for Selected Circuit</b><br><br>
     <i>Loading damage mechanisms...</i>
   `;
 
+  // clear summary
+  hideDamageSummary();
+
   await loadDamageMechanisms();
   await markSelectedDamages();
+  await refreshDamageSummary();
 };
 
 
@@ -109,7 +113,10 @@ window.toggleDamage = async (damageId, checked) => {
         damage_mechanism_id: damageId
       });
 
-    if (error) alert(error.message);
+    if (error) {
+      alert(error.message);
+      return;
+    }
 
   } else {
     const { error } = await supabase
@@ -118,6 +125,53 @@ window.toggleDamage = async (damageId, checked) => {
       .eq('circuit_id', activeCircuitId)
       .eq('damage_mechanism_id', damageId);
 
-    if (error) alert(error.message);
+    if (error) {
+      alert(error.message);
+      return;
+    }
   }
+
+  // 🔥 UPDATE SUMMARY LIVE
+  await refreshDamageSummary();
 };
+
+
+/* ===============================
+   DAMAGE SUMMARY (UI)
+================================ */
+async function refreshDamageSummary() {
+
+  const summaryBox = document.getElementById("damageSummary");
+  const list = document.getElementById("damageSummaryList");
+
+  if (!summaryBox || !list || !activeCircuitId) return;
+
+  const { data, error } = await supabase
+    .from('circuit_damage_map')
+    .select(`
+      damage_mechanism_id,
+      damage_mechanisms_master ( name )
+    `)
+    .eq('circuit_id', activeCircuitId);
+
+  if (error || !data || data.length === 0) {
+    hideDamageSummary();
+    return;
+  }
+
+  list.innerHTML = "";
+
+  data.forEach(row => {
+    list.innerHTML += `<li>${row.damage_mechanisms_master.name}</li>`;
+  });
+
+  summaryBox.style.display = "block";
+}
+
+function hideDamageSummary() {
+  const summaryBox = document.getElementById("damageSummary");
+  const list = document.getElementById("damageSummaryList");
+
+  if (summaryBox) summaryBox.style.display = "none";
+  if (list) list.innerHTML = "";
+}
