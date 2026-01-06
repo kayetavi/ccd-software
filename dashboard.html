@@ -2,47 +2,29 @@
 <html>
 <head>
   <title>CCD Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
-
 <body>
 
-<h2>CCD Data Entry Dashboard</h2>
+<h2>Create CCD Project</h2>
 
-<select id="project"></select>
-
-<hr>
-
-<h3>Process Conditions</h3>
-<input id="unit" placeholder="Unit"><br><br>
-<input id="fluid" placeholder="Fluid"><br><br>
-
-<select id="phase">
-  <option>Liquid</option>
-  <option>Vapor</option>
-  <option>Mixed</option>
-</select><br><br>
-
-<input id="temp" type="number" placeholder="Temperature °C"><br><br>
-
-<label><input type="checkbox" id="sulfur"> Sulfur</label><br>
-<label><input type="checkbox" id="chloride"> Chloride</label>
+<input id="plant" placeholder="Plant Name">
+<input id="unit" placeholder="Process Unit">
+<button onclick="createProject()">Create Project</button>
 
 <hr>
 
-<h3>Circuit</h3>
-<input id="equipment" placeholder="Equipment"><br><br>
-<input id="material" placeholder="Material"><br><br>
-<input id="design_thk" placeholder="Design Thk"><br><br>
-<input id="min_thk" placeholder="Min Thk"><br><br>
+<h3>Corrosion Systems</h3>
+<input id="systemName" placeholder="System Name">
+<textarea id="systemDesc" placeholder="Process Description"></textarea>
+<button onclick="addSystem()">Add System</button>
 
-<button onclick="saveAll()">SAVE & AUTO GENERATE</button>
+<div id="systems"></div>
 
-<hr>
-<h3>Saved Data</h3>
-<div id="data"></div>
+<br>
+<button onclick="goReport()">Generate CCD Report</button>
 
 <script type="module" src="js/dashboard.js"></script>
-<script type="module" src="js/view.js"></script>
-
+<script type="module" src="js/systems.js"></script>
 </body>
 </html>
