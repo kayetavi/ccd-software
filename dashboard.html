@@ -5,27 +5,62 @@
 </head>
 <body>
 
-<h2>CCD Data Entry</h2>
+<h2>CCD Data Entry Dashboard</h2>
 
+<!-- PROJECT -->
+<label>Project</label><br>
 <select id="project">
   <option value="">Select Project</option>
 </select>
 
-<h3>Process Conditions</h3>
-<input id="loop_name" placeholder="Loop Name (e.g. HCU HOT SECTION)">
-<input id="fluid" placeholder="Fluid">
-<input id="temperature" type="number" placeholder="Temperature (°C)">
-<label><input type="checkbox" id="sulfur"> Sulfur</label>
-<label><input type="checkbox" id="chloride"> Chloride</label>
+<hr>
 
-<h3>Circuit Info</h3>
-<input id="circuit_name" placeholder="Circuit Name">
-<input id="material" placeholder="Material">
-<input id="design_thk" placeholder="Design Thickness">
-<input id="min_thk" placeholder="Minimum Thickness">
+<!-- PROCESS CONDITIONS -->
+<h3>Process Conditions</h3>
+
+<input id="unit" placeholder="Unit / Section (e.g. HCU)"><br><br>
+
+<input id="fluid" placeholder="Fluid (e.g. Hydrocarbon)"><br><br>
+
+<label>Phase</label><br>
+<select id="phase">
+  <option value="Liquid">Liquid</option>
+  <option value="Vapor">Vapor</option>
+  <option value="Mixed">Mixed</option>
+</select><br><br>
+
+<input id="temp" type="number" placeholder="Temperature (°C)"><br><br>
+
+<label>
+  <input type="checkbox" id="sulfur"> Sulfur Present
+</label><br>
+
+<label>
+  <input type="checkbox" id="chloride"> Chloride Present
+</label>
+
+<hr>
+
+<!-- CIRCUIT INFO -->
+<h3>Circuit Information</h3>
+
+<input id="equipment" placeholder="Equipment / Line (e.g. Reactor Outlet Line)"><br><br>
+
+<input id="material" placeholder="Material (e.g. CS, SS)"><br><br>
+
+<input id="design_thk" type="number" step="0.01" placeholder="Design Thickness (mm)"><br><br>
+
+<input id="min_thk" type="number" step="0.01" placeholder="Minimum Thickness (mm)"><br><br>
 
 <button onclick="saveAll()">SAVE & AUTO GENERATE</button>
 
+<br><br>
+<p>
+  <b>Note:</b>  
+  Corrosion Loop, Circuit & Damage Mechanisms are generated automatically as per API RP 970.
+</p>
+
 <script type="module" src="js/dashboard.js"></script>
+
 </body>
 </html>
