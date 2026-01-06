@@ -1,54 +1,64 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>CCD Dashboard</title>
+  <title>CCD Maker Dashboard</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-<h2>CCD Project Setup</h2>
+<h2>CCD Maker – Single Dashboard</h2>
 
-<!-- ================= PROJECT SECTION ================= -->
-<div class="box">
-  <h3>1️⃣ Create CCD Project</h3>
-
-  <input id="plant" placeholder="Plant Name (e.g. IOCL Paradip)">
-  <input id="unit" placeholder="Process Unit (e.g. CDU)">
+<!-- ================= PROJECT ================= -->
+<div id="projectSection" class="box">
+  <h3>1️⃣ Project</h3>
+  <input id="plant" placeholder="Plant Name">
+  <input id="unit" placeholder="Process Unit">
   <button onclick="createProject()">Create Project</button>
-
-  <p id="projectStatus" style="color:green;"></p>
+  <p id="projectStatus"></p>
 </div>
 
-<hr>
+<!-- ================= LOOPS ================= -->
+<div id="loopSection" class="box" style="display:none">
+  <h3>2️⃣ Corrosion Loops</h3>
 
-<!-- ================= LOOP SECTION ================= -->
-<div class="box">
-  <h3>2️⃣ Corrosion Loops (Systems)</h3>
-
-  <input id="systemName" placeholder="Loop / System Name (e.g. Overhead System)">
-  <textarea id="systemDesc" placeholder="Process description (phase, chemistry, temp range)"></textarea>
+  <input id="systemName" placeholder="Loop / System Name">
+  <textarea id="systemDesc" placeholder="Process description"></textarea>
   <button onclick="addSystem()">Add Loop</button>
 
-  <h4>Existing Loops</h4>
-  <div id="systems">
-    <i>No loops added yet</i>
-  </div>
+  <div id="systems"></div>
 </div>
 
-<hr>
+<!-- ================= CIRCUITS ================= -->
+<div id="circuitSection" class="box" style="display:none">
+  <h3>3️⃣ Circuits</h3>
 
-<!-- ================= NEXT STEP ================= -->
-<div class="box">
-  <h3>3️⃣ Next Step</h3>
-  <p>
-    ✔ Create all corrosion loops for the unit<br>
-    ✔ Click <b>OPEN</b> on a loop to define circuits and damage mechanisms<br>
-    ✔ Generate CCD report after completing all loops
-  </p>
+  <input id="circuitName" placeholder="Circuit Name">
+  <input id="material" placeholder="Material">
+  <input id="temp" placeholder="Temp (°C)">
+  <input id="pressure" placeholder="Pressure (bar)">
+  <button onclick="addCircuit()">Add Circuit</button>
+
+  <div id="circuits"></div>
+</div>
+
+<!-- ================= DAMAGE ================= -->
+<div id="damageSection" class="box" style="display:none">
+  <h3>4️⃣ Damage Mechanisms</h3>
+  <div id="damageList"></div>
+</div>
+
+<!-- ================= REPORT ================= -->
+<div id="reportSection" class="box" style="display:none">
+  <h3>5️⃣ CCD Report</h3>
+  <button onclick="generateReport()">Generate Report</button>
+  <div id="reportContent"></div>
 </div>
 
 <script type="module" src="js/dashboard.js"></script>
 <script type="module" src="js/systems.js"></script>
+<script type="module" src="js/circuits.js"></script>
+<script type="module" src="js/damage.js"></script>
+<script type="module" src="js/report.js"></script>
 
 </body>
 </html>
