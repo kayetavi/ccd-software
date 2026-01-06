@@ -1,39 +1,30 @@
 import { supabase } from './supabase.js';
 
 /* ===============================
-   PROJECT CONTEXT (PERSISTENT)
+   PROJECT CONTEXT (IN-MEMORY)
 ================================ */
-export let currentProjectId = localStorage.getItem("active_project");
+export let currentProjectId = null;
 
 /* ===============================
    CREATE PROJECT
 ================================ */
 window.createProject = async () => {
-  const plantInput = document.getElementById("plant");
-  const unitInput = document.getElementById("unit");
-
-  if (!plantInput || !unitInput) {
-    alert("Project inputs missing in HTML");
-    return;
-  }
-
-  const plant = plantInput.value.trim();
-  const unit = unitInput.value.trim();
+  const plant = document.getElementById("plant")?.value.trim();
+  const unit = document.getElementById("unit")?.value.trim();
 
   if (!plant || !unit) {
     alert("Plant and Unit are required");
     return;
   }
 
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-  if (userError || !user) {
-    alert("User not authenticated");
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    alert("User not logged in");
     return;
   }
 
   const { data, error } = await supabase
-    .from('ccd_projects')
+    .from("ccd_projects")
     .insert({
       plant_name: plant,
       unit_name: unit,
@@ -43,17 +34,14 @@ window.createProject = async () => {
     .single();
 
   if (error) {
-    alert("Project create failed: " + error.message);
+    alert(error.message);
     return;
   }
 
   currentProjectId = data.id;
-  localStorage.setItem("active_project", data.id);
 
-  const status = document.getElementById("projectStatus");
-  if (status) {
-    status.innerText = `Project Active: ${plant} – ${unit}`;
-  }
+  document.getElementById("projectStatus").innerText =
+    `Project Active: ${data.plant_name} – ${data.unit_name}`;
 
   lockProjectInputs();
   openTab("loopSection");
@@ -62,32 +50,28 @@ window.createProject = async () => {
 };
 
 /* ===============================
-   LOAD PROJECT ON PAGE REFRESH
+   LOAD LATEST PROJECT ON LOGIN
 ================================ */
 window.addEventListener("DOMContentLoaded", async () => {
-  if (!currentProjectId) return;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
 
-  const { data, error } = await supabase
-    .from('ccd_projects')
-    .select('*')
-    .eq('id', currentProjectId)
+  const { data: project } = await supabase
+    .from("ccd_projects")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
     .single();
 
-  if (error || !data) {
-    localStorage.removeItem("active_project");
-    return;
-  }
+  if (!project) return;
 
-  const plantInput = document.getElementById("plant");
-  const unitInput = document.getElementById("unit");
+  currentProjectId = project.id;
 
-  if (plantInput) plantInput.value = data.plant_name;
-  if (unitInput) unitInput.value = data.unit_name;
-
-  const status = document.getElementById("projectStatus");
-  if (status) {
-    status.innerText = `Project Active: ${data.plant_name} – ${data.unit_name}`;
-  }
+  document.getElementById("plant").value = project.plant_name;
+  document.getElementById("unit").value = project.unit_name;
+  document.getElementById("projectStatus").innerText =
+    `Project Active: ${project.plant_name} – ${project.unit_name}`;
 
   lockProjectInputs();
   openTab("loopSection");
@@ -96,96 +80,68 @@ window.addEventListener("DOMContentLoaded", async () => {
 });
 
 /* ===============================
-   LOCK PROJECT INPUTS
-================================ */
-function lockProjectInputs() {
-  const plant = document.getElementById("plant");
-  const unit = document.getElementById("unit");
-
-  if (plant) plant.disabled = true;
-  if (unit) unit.disabled = true;
-}
-
-/* ===============================
-   LOAD CORROSION LOOPS (SYSTEMS)
+   LOAD LOOPS
 ================================ */
 window.loadSystems = async () => {
   if (!currentProjectId) return;
 
   const { data, error } = await supabase
-    .from('corrosion_systems')
-    .select('*')
-    .eq('project_id', currentProjectId)
-    .order('created_at', { ascending: true });
+    .from("corrosion_systems")
+    .select("*")
+    .eq("project_id", currentProjectId)
+    .order("created_at");
 
   if (error) {
-    alert("Failed to load loops: " + error.message);
+    alert(error.message);
     return;
   }
 
   const container = document.getElementById("systems");
-  if (!container) return;
-
   container.innerHTML = "";
 
-  if (!data || data.length === 0) {
+  if (!data.length) {
     container.innerHTML = "<i>No loops added yet</i>";
     return;
   }
 
-  data.forEach(sys => {
+  data.forEach(loop => {
     container.innerHTML += `
       <div class="box">
-        <b>${sys.system_name}</b><br>
-        <small>${sys.process_description || ""}</small><br><br>
-        <button onclick="openLoop('${sys.id}')">OPEN</button>
+        <b>${loop.system_name}</b><br>
+        <small>${loop.process_description || ""}</small><br><br>
+        <button onclick="openLoop('${loop.id}')">OPEN</button>
       </div>
     `;
   });
 };
 
 /* ===============================
-   OPEN LOOP (SINGLE DASHBOARD FLOW)
+   OPEN LOOP (NO localStorage)
 ================================ */
 window.openLoop = (loopId) => {
   if (!loopId) return;
 
-  localStorage.setItem("active_loop", loopId);
-  localStorage.removeItem("active_circuit");
+  window.activeLoopId = loopId; // in-memory only
 
   openTab("circuitSection");
 
-  // 🔥 hide report until ready
-  const report = document.getElementById("reportSection");
-  if (report) report.style.display = "none";
-
   if (window.loadCircuits) {
-    window.loadCircuits();
+    window.loadCircuits(loopId);
   }
 };
 
-
 /* ===============================
-   HELPER: SHOW SECTION SAFELY
+   UI HELPERS
 ================================ */
-function showSection(sectionId) {
-  const el = document.getElementById(sectionId);
-  if (el) el.style.display = "block";
+function lockProjectInputs() {
+  document.getElementById("plant").disabled = true;
+  document.getElementById("unit").disabled = true;
 }
 
-
-window.showReportSection = () => {
-  const report = document.getElementById("reportSection");
-  if (report) {
-    report.style.display = "block";
-  }
-};
-
 /* ===============================
-   TAB NAVIGATION (AUTO + MANUAL)
+   TAB NAVIGATION
 ================================ */
-window.openTab = (sectionId, btn = null) => {
-
+window.openTab = (sectionId) => {
   const sections = [
     "projectSection",
     "loopSection",
@@ -194,32 +150,18 @@ window.openTab = (sectionId, btn = null) => {
     "reportSection"
   ];
 
-  /* hide all sections */
   sections.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = "none";
   });
 
-  /* show active section */
-  const activeSection = document.getElementById(sectionId);
-  if (activeSection) {
-    activeSection.style.display = "block";
-    activeSection.scrollIntoView({ behavior: "smooth" });
-  }
+  document.getElementById(sectionId).style.display = "block";
 
-  /* reset tab highlight */
   document.querySelectorAll(".tab").forEach(tab =>
     tab.classList.remove("active")
   );
 
-  /* highlight correct tab */
-  if (btn) {
-    btn.classList.add("active");
-  } else {
-    // 🔥 auto-detect tab using sectionId
-    const autoTab = document.querySelector(
-      `.tab[data-target="${sectionId}"]`
-    );
-    if (autoTab) autoTab.classList.add("active");
-  }
+  document
+    .querySelector(`.tab[data-target="${sectionId}"]`)
+    ?.classList.add("active");
 };
