@@ -47,25 +47,27 @@
 
   <div id="damageList"></div>
 
-  <!-- ✅ NEW: Damage Summary -->
+  <!-- Damage Summary -->
   <div id="damageSummary" style="margin-top:15px; display:none">
     <h4>Selected Damage Mechanisms</h4>
     <ul id="damageSummaryList"></ul>
   </div>
-</div>
 
+  <!-- ✅ GENERATE REPORT BUTTON (CORRECT PLACE) -->
+  <button
+    style="margin-top:15px"
+    onclick="window.generateReport()">
+    Generate CCD Report
+  </button>
+</div>
 
 <!-- ================= REPORT ================= -->
 <div id="reportSection" class="box" style="display:none">
   <h3>5️⃣ CCD Report</h3>
-<button onclick="showReportSection(); window.generateReport();">
-  Generate Report
-</button>
-
-
   <div id="reportContent"></div>
 </div>
 
+<!-- ================= SCRIPTS ================= -->
 <script type="module" src="js/dashboard.js"></script>
 <script type="module" src="js/systems.js"></script>
 <script type="module" src="js/circuits.js"></script>
