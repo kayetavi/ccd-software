@@ -1,51 +1,58 @@
 import { supabase } from './supabase.js';
 import { currentProjectId } from './dashboard.js';
 
+/* ===============================
+   ADD CORROSION LOOP / SYSTEM
+================================ */
 window.addSystem = async () => {
+
   if (!currentProjectId) {
-    alert("Create project first");
+    alert("Please create/select a CCD project first");
     return;
   }
 
-  const name = systemName.value;
-  const desc = systemDesc.value;
+  const name = systemName.value.trim();
+  const desc = systemDesc.value.trim();
 
-  const { data, error } = await supabase
+  if (!name) {
+    alert("Loop / System name is required");
+    return;
+  }
+
+  const { error } = await supabase
     .from('corrosion_systems')
     .insert({
       project_id: currentProjectId,
       system_name: name,
       process_description: desc
-    })
-    .select();
+    });
 
-  if (!error) loadSystems();
-  else alert(error.message);
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  // clear inputs
+  systemName.value = "";
+  systemDesc.value = "";
+
+  // 🔥 reload loop list (function lives in dashboard.js)
+  loadSystems();
 };
 
-async function loadSystems() {
-  const { data } = await supabase
-    .from('corrosion_systems')
-    .select('*')
-    .eq('project_id', currentProjectId);
+/* ===============================
+   OPEN LOOP (SELECT LOOP)
+================================ */
+window.openLoop = (loopId) => {
+  // active loop = selected corrosion system
+  localStorage.setItem("active_loop", loopId);
 
-  const div = document.getElementById("systems");
-  div.innerHTML = "";
-
-  data.forEach(sys => {
-    div.innerHTML += `
-      <div class="box">
-        <b>${sys.system_name}</b>
-        <br>
-        <button onclick="openCircuits('${sys.id}')">Add Circuits</button>
-      </div>`;
-  });
-}
-
-window.openCircuits = (id) => {
-  localStorage.setItem("system_id", id);
-  location.href = "report.html";
+  // go to loop page (circuits + damage)
+  location.href = "loop.html";
 };
 
+/* ===============================
+   DOM REFERENCES
+================================ */
 const systemName = document.getElementById("systemName");
 const systemDesc = document.getElementById("systemDesc");
