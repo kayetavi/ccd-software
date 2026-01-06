@@ -8,12 +8,17 @@ let activeCircuitId = null;
 window.selectCircuitForDamage = async (circuitId) => {
   activeCircuitId = circuitId;
 
-  document.getElementById("damageList").innerHTML =
-    "<i>Loading damage mechanisms...</i>";
+  const div = document.getElementById("damageList");
+
+  div.innerHTML = `
+    <b>Damage Mechanisms for Selected Circuit</b><br><br>
+    <i>Loading damage mechanisms...</i>
+  `;
 
   await loadDamageMechanisms();
   await markSelectedDamages();
 };
+
 
 /* ===============================
    LOAD DAMAGE MASTER
