@@ -6,25 +6,48 @@
 </head>
 <body>
 
-<h2>Create CCD Project</h2>
+<h2>CCD Project Setup</h2>
 
-<input id="plant" placeholder="Plant Name">
-<input id="unit" placeholder="Process Unit">
-<button onclick="createProject()">Create Project</button>
+<!-- ================= PROJECT SECTION ================= -->
+<div class="box">
+  <h3>1️⃣ Create CCD Project</h3>
+
+  <input id="plant" placeholder="Plant Name (e.g. IOCL Paradip)">
+  <input id="unit" placeholder="Process Unit (e.g. CDU)">
+  <button onclick="createProject()">Create Project</button>
+
+  <p id="projectStatus"></p>
+</div>
 
 <hr>
 
-<h3>Corrosion Systems</h3>
-<input id="systemName" placeholder="System Name">
-<textarea id="systemDesc" placeholder="Process Description"></textarea>
-<button onclick="addSystem()">Add System</button>
+<!-- ================= LOOP SECTION ================= -->
+<div class="box">
+  <h3>2️⃣ Corrosion Loops (Systems)</h3>
 
-<div id="systems"></div>
+  <input id="systemName" placeholder="Loop / System Name (e.g. Overhead System)">
+  <textarea id="systemDesc" placeholder="Process description (phase, chemistry, temp range)"></textarea>
+  <button onclick="addSystem()">Add Loop</button>
 
-<br>
-<button onclick="goReport()">Generate CCD Report</button>
+  <h4>Existing Loops</h4>
+  <div id="systems">
+    <i>No loops added yet</i>
+  </div>
+</div>
+
+<hr>
+
+<!-- ================= INFO ================= -->
+<div class="box">
+  <h3>3️⃣ Next Step</h3>
+  <p>
+    ➤ Click <b>OPEN</b> on a loop to add <b>Circuits & Damage Mechanisms</b><br>
+    ➤ CCD Report will be generated after completing all loops
+  </p>
+</div>
 
 <script type="module" src="js/dashboard.js"></script>
 <script type="module" src="js/systems.js"></script>
+
 </body>
 </html>
