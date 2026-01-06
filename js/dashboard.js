@@ -9,15 +9,28 @@ export let currentProjectId = localStorage.getItem("active_project");
    CREATE PROJECT
 ================================ */
 window.createProject = async () => {
-  const plant = document.getElementById("plant").value.trim();
-  const unit = document.getElementById("unit").value.trim();
+  const plantInput = document.getElementById("plant");
+  const unitInput = document.getElementById("unit");
+
+  if (!plantInput || !unitInput) {
+    alert("Project inputs missing in HTML");
+    return;
+  }
+
+  const plant = plantInput.value.trim();
+  const unit = unitInput.value.trim();
 
   if (!plant || !unit) {
     alert("Plant and Unit are required");
     return;
   }
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    alert("User not authenticated");
+    return;
+  }
 
   const { data, error } = await supabase
     .from('ccd_projects')
@@ -30,26 +43,26 @@ window.createProject = async () => {
     .single();
 
   if (error) {
-    alert(error.message);
+    alert("Project create failed: " + error.message);
     return;
   }
 
   currentProjectId = data.id;
   localStorage.setItem("active_project", data.id);
 
-  document.getElementById("projectStatus").innerText =
-    `Project Active: ${plant} – ${unit}`;
+  const status = document.getElementById("projectStatus");
+  if (status) {
+    status.innerText = `Project Active: ${plant} – ${unit}`;
+  }
 
   lockProjectInputs();
-
-  // 🔥 SHOW LOOP SECTION
-  document.getElementById("loopSection").style.display = "block";
+  showSection("loopSection");
 
   loadSystems();
 };
 
 /* ===============================
-   LOAD EXISTING PROJECT ON REFRESH
+   LOAD PROJECT ON PAGE REFRESH
 ================================ */
 window.addEventListener("DOMContentLoaded", async () => {
   if (!currentProjectId) return;
@@ -60,21 +73,24 @@ window.addEventListener("DOMContentLoaded", async () => {
     .eq('id', currentProjectId)
     .single();
 
-  if (error) {
+  if (error || !data) {
     localStorage.removeItem("active_project");
     return;
   }
 
-  document.getElementById("plant").value = data.plant_name;
-  document.getElementById("unit").value = data.unit_name;
+  const plantInput = document.getElementById("plant");
+  const unitInput = document.getElementById("unit");
 
-  document.getElementById("projectStatus").innerText =
-    `Project Active: ${data.plant_name} – ${data.unit_name}`;
+  if (plantInput) plantInput.value = data.plant_name;
+  if (unitInput) unitInput.value = data.unit_name;
+
+  const status = document.getElementById("projectStatus");
+  if (status) {
+    status.innerText = `Project Active: ${data.plant_name} – ${data.unit_name}`;
+  }
 
   lockProjectInputs();
-
-  // 🔥 SHOW LOOP SECTION
-  document.getElementById("loopSection").style.display = "block";
+  showSection("loopSection");
 
   loadSystems();
 });
@@ -83,23 +99,33 @@ window.addEventListener("DOMContentLoaded", async () => {
    LOCK PROJECT INPUTS
 ================================ */
 function lockProjectInputs() {
-  document.getElementById("plant").disabled = true;
-  document.getElementById("unit").disabled = true;
+  const plant = document.getElementById("plant");
+  const unit = document.getElementById("unit");
+
+  if (plant) plant.disabled = true;
+  if (unit) unit.disabled = true;
 }
 
 /* ===============================
-   LOAD LOOPS (SYSTEMS)
+   LOAD CORROSION LOOPS (SYSTEMS)
 ================================ */
 window.loadSystems = async () => {
   if (!currentProjectId) return;
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('corrosion_systems')
     .select('*')
     .eq('project_id', currentProjectId)
-    .order('created_at');
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    alert("Failed to load loops: " + error.message);
+    return;
+  }
 
   const container = document.getElementById("systems");
+  if (!container) return;
+
   container.innerHTML = "";
 
   if (!data || data.length === 0) {
@@ -119,19 +145,25 @@ window.loadSystems = async () => {
 };
 
 /* ===============================
-   OPEN LOOP (SINGLE PAGE FLOW)
+   OPEN LOOP (SINGLE DASHBOARD FLOW)
 ================================ */
 window.openLoop = (loopId) => {
+  if (!loopId) return;
+
   localStorage.setItem("active_loop", loopId);
-
-  // 🔥 SHOW CIRCUIT SECTION
-  document.getElementById("circuitSection").style.display = "block";
-
-  // clear old circuit selection
   localStorage.removeItem("active_circuit");
 
-  // reload circuits for selected loop
+  showSection("circuitSection");
+
   if (window.loadCircuits) {
     window.loadCircuits();
   }
 };
+
+/* ===============================
+   HELPER: SHOW SECTION SAFELY
+================================ */
+function showSection(sectionId) {
+  const el = document.getElementById(sectionId);
+  if (el) el.style.display = "block";
+}
