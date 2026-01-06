@@ -1,21 +1,34 @@
-alert("project.js loaded");
 import { supabase } from './supabase.js';
+
+const projectSelect = document.getElementById("projectSelect");
+
+async function loadProjects() {
+  const { data } = await supabase
+    .from("projects")
+    .select("*");
+
+  projectSelect.innerHTML = `<option value="">Select Project</option>`;
+  data.forEach(p => {
+    projectSelect.innerHTML +=
+      `<option value="${p.id}">${p.project_name}</option>`;
+  });
+}
 
 window.saveProject = async function () {
   const project = document.getElementById("project").value;
   const plant = document.getElementById("plant").value;
 
-  const { data, error } = await supabase
-    .from("projects")
-    .insert([
-      { project_name: project, plant_name: plant }
-    ]);
+  await supabase.from("projects").insert([
+    { project_name: project, plant_name: plant }
+  ]);
 
-  if (error) {
-    alert("❌ ERROR: " + error.message);
-    console.error("Supabase Error:", error);
-  } else {
-    alert("✅ Project Created Successfully");
-    console.log("Inserted:", data);
-  }
+  alert("✅ Project Saved");
+  loadProjects();
 };
+
+window.selectProject = function () {
+  localStorage.setItem("project_id", projectSelect.value);
+  alert("Project Selected");
+};
+
+loadProjects();
