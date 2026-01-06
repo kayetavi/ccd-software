@@ -29,10 +29,13 @@ window.selectCircuitForDamage = async (circuitId) => {
     <i>Loading damage mechanisms...</i>
   `;
 
-  // clear summary
   hideDamageSummary();
 
   await loadDamageMechanisms();
+
+  // ✅ IMPORTANT: wait for DOM render
+  await new Promise(requestAnimationFrame);
+
   await markSelectedDamages();
   await refreshDamageSummary();
 };
@@ -131,13 +134,12 @@ window.toggleDamage = async (damageId, checked) => {
     }
   }
 
-  // 🔥 UPDATE SUMMARY LIVE
   await refreshDamageSummary();
 };
 
 
 /* ===============================
-   DAMAGE SUMMARY (UI)
+   DAMAGE SUMMARY
 ================================ */
 async function refreshDamageSummary() {
 
@@ -149,7 +151,6 @@ async function refreshDamageSummary() {
   const { data, error } = await supabase
     .from('circuit_damage_map')
     .select(`
-      damage_mechanism_id,
       damage_mechanisms_master ( name )
     `)
     .eq('circuit_id', activeCircuitId);
@@ -160,7 +161,6 @@ async function refreshDamageSummary() {
   }
 
   list.innerHTML = "";
-
   data.forEach(row => {
     list.innerHTML += `<li>${row.damage_mechanisms_master.name}</li>`;
   });
