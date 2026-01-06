@@ -1,11 +1,42 @@
 <!DOCTYPE html>
 <html>
+<head>
+  <title>CCD Report</title>
+  <style>
+    body { font-family: Arial; margin: 40px; }
+    h1, h2 { border-bottom: 1px solid #000; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    td, th { border: 1px solid #000; padding: 6px; }
+  </style>
+</head>
+
 <body>
-<h2>CCD – API 970</h2>
+  <h1>Corrosion Control Document (CCD)</h1>
+  <p><b>Standard:</b> API RP 970</p>
 
-<button onclick="window.print()">Export PDF</button>
-<pre id="report"></pre>
+  <h2>Project Information</h2>
+  <div id="project"></div>
 
-<script type="module" src="js/report.js"></script>
+  <h2>Corrosion Loop</h2>
+  <div id="loop"></div>
+
+  <h2>Circuit & Damage Mechanism</h2>
+  <table id="damageTable">
+    <tr>
+      <th>Circuit</th>
+      <th>Damage</th>
+      <th>API Ref</th>
+      <th>Inspection</th>
+      <th>Interval (yrs)</th>
+    </tr>
+  </table>
+
+  <h2>Thickness & Remaining Life</h2>
+  <div id="life"></div>
+
+  <h2>Recommendation</h2>
+  <div id="recommendation"></div>
+
+  <script type="module" src="js/ccd-report.js"></script>
 </body>
 </html>
