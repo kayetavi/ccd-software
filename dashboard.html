@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CCD Dashboard</title>
+</head>
+<body>
+
+<h2>CCD Data Entry</h2>
+
+<select id="project">
+  <option value="">Select Project</option>
+</select>
+
+<h3>Process Conditions</h3>
+<input id="loop_name" placeholder="Loop Name (e.g. HCU HOT SECTION)">
+<input id="fluid" placeholder="Fluid">
+<input id="temperature" type="number" placeholder="Temperature (°C)">
+<label><input type="checkbox" id="sulfur"> Sulfur</label>
+<label><input type="checkbox" id="chloride"> Chloride</label>
+
+<h3>Circuit Info</h3>
+<input id="circuit_name" placeholder="Circuit Name">
+<input id="material" placeholder="Material">
+<input id="design_thk" placeholder="Design Thickness">
+<input id="min_thk" placeholder="Minimum Thickness">
+
+<button onclick="saveAll()">SAVE & AUTO GENERATE</button>
+
+<script type="module" src="js/dashboard.js"></script>
+</body>
+</html>
