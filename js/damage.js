@@ -1,16 +1,26 @@
 import { supabase } from './supabase.js';
 
+let activeCircuitId = null;
+
 /* ===============================
-   ACTIVE CIRCUIT (DYNAMIC)
+   CALLED FROM circuits.js
 ================================ */
-let activeCircuitId = localStorage.getItem("active_circuit");
+window.selectCircuitForDamage = async (circuitId) => {
+  activeCircuitId = circuitId;
+
+  document.getElementById("damageList").innerHTML =
+    "<i>Loading damage mechanisms...</i>";
+
+  await loadDamageMechanisms();
+  await markSelectedDamages();
+};
 
 /* ===============================
    LOAD DAMAGE MASTER
 ================================ */
-window.loadDamageMechanisms = async () => {
+async function loadDamageMechanisms() {
 
-  const { data: master, error } = await supabase
+  const { data, error } = await supabase
     .from('damage_mechanisms_master')
     .select('*')
     .order('name');
@@ -20,88 +30,57 @@ window.loadDamageMechanisms = async () => {
     return;
   }
 
-  const container = document.getElementById("damageList");
-  container.innerHTML = "";
+  const div = document.getElementById("damageList");
+  div.innerHTML = "";
 
-  if (!master || master.length === 0) {
-    container.innerHTML = "<i>No damage mechanisms configured</i>";
-    return;
-  }
-
-  // Load already mapped damage for circuit
-  let selected = [];
-  if (activeCircuitId) {
-    const res = await supabase
-      .from('circuit_damage_map')
-      .select('damage_mechanism_id')
-      .eq('circuit_id', activeCircuitId);
-
-    selected = res.data?.map(d => d.damage_mechanism_id) || [];
-  }
-
-  master.forEach(dm => {
-    const checked = selected.includes(dm.id) ? "checked" : "";
-
-    container.innerHTML += `
+  data.forEach(dm => {
+    div.innerHTML += `
       <label style="display:block;margin-bottom:6px">
         <input type="checkbox"
-          ${checked}
+          id="dm-${dm.id}"
           onchange="toggleDamage('${dm.id}', this.checked)">
         <b>${dm.name}</b>
-        <small>(${dm.api_reference || "API"})</small>
+        <small>(${dm.api_reference})</small>
       </label>
     `;
   });
-};
+}
 
 /* ===============================
-   CALLED FROM circuits.js
+   LOAD EXISTING DAMAGE FOR CIRCUIT
 ================================ */
-window.selectCircuitForDamage = (circuitId) => {
-  activeCircuitId = circuitId;
-  localStorage.setItem("active_circuit", circuitId);
+async function markSelectedDamages() {
 
-  // show damage section
-  const section = document.getElementById("damageSection");
-  if (section) section.style.display = "block";
+  const { data } = await supabase
+    .from('circuit_damage_map')
+    .select('damage_mechanism_id')
+    .eq('circuit_id', activeCircuitId);
 
-  loadDamageMechanisms();
-};
+  if (!data) return;
+
+  data.forEach(row => {
+    const cb = document.getElementById(`dm-${row.damage_mechanism_id}`);
+    if (cb) cb.checked = true;
+  });
+}
 
 /* ===============================
-   ADD / REMOVE DAMAGE
+   TOGGLE DAMAGE
 ================================ */
 window.toggleDamage = async (damageId, checked) => {
 
-  if (!activeCircuitId) {
-    alert("Select a circuit first");
-    return;
-  }
+  if (!activeCircuitId) return;
 
   if (checked) {
-    const { error } = await supabase
-      .from('circuit_damage_map')
-      .insert({
-        circuit_id: activeCircuitId,
-        damage_mechanism_id: damageId
-      });
-
-    if (error) alert(error.message);
-
+    await supabase.from('circuit_damage_map').insert({
+      circuit_id: activeCircuitId,
+      damage_mechanism_id: damageId
+    });
   } else {
-    const { error } = await supabase
+    await supabase
       .from('circuit_damage_map')
       .delete()
       .eq('circuit_id', activeCircuitId)
       .eq('damage_mechanism_id', damageId);
-
-    if (error) alert(error.message);
   }
 };
-
-/* ===============================
-   AUTO LOAD ON REFRESH
-================================ */
-if (activeCircuitId) {
-  loadDamageMechanisms();
-}
