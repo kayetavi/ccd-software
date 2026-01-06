@@ -24,7 +24,7 @@ window.addSystem = async () => {
     .insert({
       project_id: currentProjectId,
       system_name: name,
-      process_description: desc
+      process_description: desc || null
     });
 
   if (error) {
@@ -36,33 +36,40 @@ window.addSystem = async () => {
   systemName.value = "";
   systemDesc.value = "";
 
-  // reload loop list
-  loadSystems();
+  // reload loop list (safe)
+  if (window.loadSystems) {
+    window.loadSystems();
+  }
 };
 
 /* ===============================
-   OPEN LOOP (NO REDIRECT)
+   OPEN LOOP (SAME DASHBOARD)
 ================================ */
 window.openLoop = (loopId) => {
+
+  if (!loopId) return;
 
   // ✅ save active loop
   localStorage.setItem("active_loop", loopId);
 
-  // ✅ SHOW CIRCUIT SECTION (same dashboard)
+  // ✅ show CIRCUITS section
   const circuitSection = document.getElementById("circuitSection");
   if (circuitSection) {
     circuitSection.style.display = "block";
     circuitSection.scrollIntoView({ behavior: "smooth" });
   }
 
-  // OPTIONAL: hide damage & report until circuit selected
+  // reset DAMAGE & REPORT until circuit selected
   const damageSection = document.getElementById("damageSection");
   const reportSection = document.getElementById("reportSection");
 
   if (damageSection) damageSection.style.display = "none";
   if (reportSection) reportSection.style.display = "none";
 
-  // OPTIONAL: load circuits immediately
+  // clear old data (optional but recommended)
+  localStorage.removeItem("active_circuit");
+
+  // load circuits for this loop
   if (window.loadCircuits) {
     window.loadCircuits();
   }
