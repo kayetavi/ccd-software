@@ -1,14 +1,17 @@
-<!DOCTYPE html>
-<html>
-<body>
-<h2>Damage Mechanisms (API 970)</h2>
+<h2>Damage Mechanisms</h2>
 
-<input id="damage" placeholder="Damage Name">
-<input id="api" placeholder="API 970 Ref">
-<button onclick="saveDamage()">Add Damage</button>
+<select id="circuitSelect"></select>
 
-<ul id="damageList"></ul>
+<table border="1" width="100%">
+  <thead>
+    <tr>
+      <th>Damage Mechanism</th>
+      <th>Likelihood</th>
+      <th>Inspection Focus</th>
+      <th>API Ref</th>
+    </tr>
+  </thead>
+  <tbody id="damageTable"></tbody>
+</table>
 
 <script type="module" src="js/damage.js"></script>
-</body>
-</html>
