@@ -153,7 +153,7 @@ window.openLoop = (loopId) => {
   localStorage.setItem("active_loop", loopId);
   localStorage.removeItem("active_circuit");
 
-  showSection("circuitSection");
+  openTab("circuitSection");
 
   // 🔥 hide report until ready
   const report = document.getElementById("reportSection");
