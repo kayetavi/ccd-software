@@ -1,18 +1,20 @@
 import { supabase } from './supabase.js';
 
 /* ===============================
-   ACTIVE LOOP (SYSTEM)
+   ACTIVE LOOP (DYNAMIC)
 ================================ */
-const systemId = localStorage.getItem("active_loop");
-
-if (!systemId) {
-  alert("No active loop selected");
-}
+let systemId = localStorage.getItem("active_loop");
 
 /* ===============================
    ADD CIRCUIT
 ================================ */
 window.addCircuit = async () => {
+
+  systemId = localStorage.getItem("active_loop");
+  if (!systemId) {
+    alert("Please select a corrosion loop first");
+    return;
+  }
 
   const name = circuitName.value.trim();
   const mat = material.value.trim();
@@ -39,7 +41,6 @@ window.addCircuit = async () => {
     return;
   }
 
-  // clear inputs
   circuitName.value = "";
   material.value = "";
   temp.value = "";
@@ -49,16 +50,18 @@ window.addCircuit = async () => {
 };
 
 /* ===============================
-   LOAD CIRCUITS
+   LOAD CIRCUITS (GLOBAL)
 ================================ */
-async function loadCircuits() {
+window.loadCircuits = async () => {
+
+  systemId = localStorage.getItem("active_loop");
   if (!systemId) return;
 
   const { data, error } = await supabase
     .from('circuits')
     .select('*')
     .eq('system_id', systemId)
-    .order('created_at', { ascending: true });
+    .order('created_at');
 
   if (error) {
     alert(error.message);
@@ -86,13 +89,19 @@ async function loadCircuits() {
       </div>
     `;
   });
-}
+};
 
 /* ===============================
-   SELECT CIRCUIT (FOR DAMAGE)
+   SELECT CIRCUIT
 ================================ */
 window.selectCircuit = (circuitId) => {
   localStorage.setItem("active_circuit", circuitId);
+
+  // 🔥 SHOW DAMAGE SECTION
+  const damageSection = document.getElementById("damageSection");
+  if (damageSection) {
+    damageSection.style.display = "block";
+  }
 
   // inform damage module
   if (window.selectCircuitForDamage) {
@@ -101,9 +110,11 @@ window.selectCircuit = (circuitId) => {
 };
 
 /* ===============================
-   INITIAL LOAD
+   INITIAL LOAD (SAFE)
 ================================ */
-loadCircuits();
+if (systemId) {
+  loadCircuits();
+}
 
 /* ===============================
    DOM REFERENCES
