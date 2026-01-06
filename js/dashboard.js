@@ -41,7 +41,11 @@ window.createProject = async () => {
     `Project Active: ${plant} – ${unit}`;
 
   lockProjectInputs();
-  loadSystems();   // load loops immediately
+
+  // 🔥 SHOW LOOP SECTION
+  document.getElementById("loopSection").style.display = "block";
+
+  loadSystems();
 };
 
 /* ===============================
@@ -68,11 +72,15 @@ window.addEventListener("DOMContentLoaded", async () => {
     `Project Active: ${data.plant_name} – ${data.unit_name}`;
 
   lockProjectInputs();
+
+  // 🔥 SHOW LOOP SECTION
+  document.getElementById("loopSection").style.display = "block";
+
   loadSystems();
 });
 
 /* ===============================
-   LOCK PROJECT SECTION
+   LOCK PROJECT INPUTS
 ================================ */
 function lockProjectInputs() {
   document.getElementById("plant").disabled = true;
@@ -80,7 +88,7 @@ function lockProjectInputs() {
 }
 
 /* ===============================
-   LOAD SYSTEMS (CALLED FROM systems.js)
+   LOAD LOOPS (SYSTEMS)
 ================================ */
 window.loadSystems = async () => {
   if (!currentProjectId) return;
@@ -89,7 +97,7 @@ window.loadSystems = async () => {
     .from('corrosion_systems')
     .select('*')
     .eq('project_id', currentProjectId)
-    .order('created_at', { ascending: true });
+    .order('created_at');
 
   const container = document.getElementById("systems");
   container.innerHTML = "";
@@ -111,9 +119,19 @@ window.loadSystems = async () => {
 };
 
 /* ===============================
-   OPEN LOOP (GO TO CIRCUIT PAGE)
+   OPEN LOOP (SINGLE PAGE FLOW)
 ================================ */
 window.openLoop = (loopId) => {
   localStorage.setItem("active_loop", loopId);
-  location.href = "loop.html";
+
+  // 🔥 SHOW CIRCUIT SECTION
+  document.getElementById("circuitSection").style.display = "block";
+
+  // clear old circuit selection
+  localStorage.removeItem("active_circuit");
+
+  // reload circuits for selected loop
+  if (window.loadCircuits) {
+    window.loadCircuits();
+  }
 };
