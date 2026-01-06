@@ -36,19 +36,36 @@ window.addSystem = async () => {
   systemName.value = "";
   systemDesc.value = "";
 
-  // 🔥 reload loop list (function lives in dashboard.js)
+  // reload loop list
   loadSystems();
 };
 
 /* ===============================
-   OPEN LOOP (SELECT LOOP)
+   OPEN LOOP (NO REDIRECT)
 ================================ */
 window.openLoop = (loopId) => {
-  // active loop = selected corrosion system
+
+  // ✅ save active loop
   localStorage.setItem("active_loop", loopId);
 
-  // go to loop page (circuits + damage)
-  location.href = "loop.html";
+  // ✅ SHOW CIRCUIT SECTION (same dashboard)
+  const circuitSection = document.getElementById("circuitSection");
+  if (circuitSection) {
+    circuitSection.style.display = "block";
+    circuitSection.scrollIntoView({ behavior: "smooth" });
+  }
+
+  // OPTIONAL: hide damage & report until circuit selected
+  const damageSection = document.getElementById("damageSection");
+  const reportSection = document.getElementById("reportSection");
+
+  if (damageSection) damageSection.style.display = "none";
+  if (reportSection) reportSection.style.display = "none";
+
+  // OPTIONAL: load circuits immediately
+  if (window.loadCircuits) {
+    window.loadCircuits();
+  }
 };
 
 /* ===============================
