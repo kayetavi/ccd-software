@@ -1,25 +1,31 @@
-import { supabase } from './supabase.js';
+import { supabase } from "./supabase.js";
 
-const projectId = localStorage.getItem("project_id");
+const { data, error } = await supabase
+  .from("ccd_view")   // we will create this view
+  .select("*");
 
-const loadReport = async () => {
-  const { data } = await supabase
-    .from("corrosion_loops")
-    .select(`
-      loop_name,
-      circuits (
-        circuit_name,
-        material,
-        damage_mechanisms (
-          mechanism_name,
-          api_reference
-        )
-      )
-    `)
-    .eq("project_id", projectId);
+if (error) {
+  alert(error.message);
+  console.error(error);
+}
 
-  document.getElementById("report").innerText =
-    JSON.stringify(data, null, 2);
-};
+document.getElementById("project").innerText =
+  `${data[0].project_name}`;
 
-loadReport();
+document.getElementById("loop").innerText =
+  data[0].loop_name;
+
+data.forEach(row => {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td>${row.circuit_name}</td>
+    <td>${row.mechanism_name}</td>
+    <td>${row.damage_api}</td>
+    <td>${row.inspection_method}</td>
+    <td>${row.inspection_interval_years}</td>
+  `;
+  damageTable.appendChild(tr);
+});
+
+document.getElementById("life").innerText =
+  `Remaining Life: ${row.remaining_life_years} years`;
