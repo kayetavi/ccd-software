@@ -1,6 +1,9 @@
 import { supabase } from './supabase.js';
 
-let activeCircuitId = null;
+/* ===============================
+   ACTIVE CIRCUIT (IN-MEMORY)
+================================ */
+window.activeCircuitId = null;
 
 /* ===============================
    CALLED FROM circuits.js
@@ -12,11 +15,13 @@ window.selectCircuitForDamage = async (circuitId) => {
     return;
   }
 
-  activeCircuitId = circuitId;
+  // ✅ set active circuit globally
+  window.activeCircuitId = circuitId;
 
-  // 🔥 SHOW DAMAGE SECTION
-  const section = document.getElementById("damageSection");
-  if (section) section.style.display = "block";
+  // open DAMAGE tab
+  if (window.openTab) {
+    window.openTab("damageSection");
+  }
 
   const div = document.getElementById("damageList");
   if (!div) {
@@ -34,7 +39,7 @@ window.selectCircuitForDamage = async (circuitId) => {
 
   await loadDamageMechanisms();
 
-  // wait for DOM
+  // wait for DOM render
   await new Promise(requestAnimationFrame);
 
   await markSelectedDamages();
@@ -87,14 +92,14 @@ async function loadDamageMechanisms() {
 ================================ */
 async function markSelectedDamages() {
 
-  if (!activeCircuitId) return;
+  if (!window.activeCircuitId) return;
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('circuit_damage_map')
     .select('damage_mechanism_id')
-    .eq('circuit_id', activeCircuitId);
+    .eq('circuit_id', window.activeCircuitId);
 
-  if (!data) return;
+  if (error || !data) return;
 
   data.forEach(row => {
     const cb = document.getElementById(`dm-${row.damage_mechanism_id}`);
@@ -108,13 +113,13 @@ async function markSelectedDamages() {
 ================================ */
 window.toggleDamage = async (damageId, checked) => {
 
-  if (!activeCircuitId || !damageId) return;
+  if (!window.activeCircuitId || !damageId) return;
 
   if (checked) {
     const { error } = await supabase
       .from('circuit_damage_map')
       .insert({
-        circuit_id: activeCircuitId,
+        circuit_id: window.activeCircuitId,
         damage_mechanism_id: damageId
       });
 
@@ -127,7 +132,7 @@ window.toggleDamage = async (damageId, checked) => {
     const { error } = await supabase
       .from('circuit_damage_map')
       .delete()
-      .eq('circuit_id', activeCircuitId)
+      .eq('circuit_id', window.activeCircuitId)
       .eq('damage_mechanism_id', damageId);
 
     if (error) {
@@ -149,16 +154,16 @@ async function refreshDamageSummary() {
   const summaryBox = document.getElementById("damageSummary");
   const list = document.getElementById("damageSummaryList");
 
-  if (!summaryBox || !list || !activeCircuitId) return;
+  if (!summaryBox || !list || !window.activeCircuitId) return;
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('circuit_damage_map')
     .select(`
       damage_mechanisms_master ( name )
     `)
-    .eq('circuit_id', activeCircuitId);
+    .eq('circuit_id', window.activeCircuitId);
 
-  if (!data || data.length === 0) {
+  if (error || !data || data.length === 0) {
     hideDamageSummary();
     hideReportSection();
     return;
@@ -181,8 +186,13 @@ function showReportIfReady() {
   const report = document.getElementById("reportSection");
   if (!report) return;
 
-  // show only if at least 1 damage selected
+  // show report tab only if damage exists
   report.style.display = "block";
+
+  // optional auto tab open
+  if (window.openTab) {
+    window.openTab("reportSection");
+  }
 }
 
 function hideReportSection() {
