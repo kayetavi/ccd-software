@@ -1,15 +1,10 @@
 import { supabase } from "./supabase.js";
 
-/* ---------------- LOAD PROJECT LIST ---------------- */
+/* LOAD PROJECTS */
 async function loadProjects() {
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("projects")
     .select("id, project_name");
-
-  if (error) {
-    alert("Project load error");
-    return;
-  }
 
   const sel = document.getElementById("project");
   sel.innerHTML = `<option value="">-- Select Project --</option>`;
@@ -22,19 +17,19 @@ async function loadProjects() {
   });
 }
 
-/* ---------------- TEMP BAND LOGIC ---------------- */
+/* TEMP BAND */
 function getTempBand(temp) {
   if (temp > 260) return "HIGH";
   if (temp >= 120) return "MEDIUM";
   return "LOW";
 }
 
-/* ---------------- AUTO LOOP ---------------- */
+/* AUTO LOOP */
 async function getOrCreateLoop(input) {
 
   const tempBand = getTempBand(input.temperature);
 
-  const { data: existingLoops, error } = await supabase
+  const { data: loops } = await supabase
     .from("corrosion_loops")
     .select("*")
     .eq("project_id", input.project_id)
@@ -44,23 +39,13 @@ async function getOrCreateLoop(input) {
     .eq("chloride", input.chloride)
     .eq("temp_band", tempBand);
 
-  if (error) {
-    alert("Loop search error");
-    throw error;
-  }
+  if (loops.length > 0) return loops[0];
 
-  if (existingLoops.length > 0) {
-    return existingLoops[0]; // reuse loop
-  }
-
-  // CREATE NEW LOOP
-  const loopName = `${input.unit} ${tempBand} TEMP LOOP`;
-
-  const { data: newLoop, error: insertError } = await supabase
+  const { data: loop } = await supabase
     .from("corrosion_loops")
     .insert([{
       project_id: input.project_id,
-      loop_name: loopName,
+      loop_name: `${input.unit} ${tempBand} TEMP LOOP`,
       fluid: input.fluid,
       phase: input.phase,
       temp_band: tempBand,
@@ -70,15 +55,10 @@ async function getOrCreateLoop(input) {
     .select()
     .single();
 
-  if (insertError) {
-    alert("Loop create failed");
-    throw insertError;
-  }
-
-  return newLoop;
+  return loop;
 }
 
-/* ---------------- SAVE ALL (MAIN) ---------------- */
+/* SAVE ALL */
 window.saveAll = async function () {
 
   const project_id = project.value;
@@ -99,31 +79,20 @@ window.saveAll = async function () {
     chloride: chloride.checked
   };
 
-  // AUTO LOOP
   const loop = await getOrCreateLoop(loopInput);
 
-  // AUTO CIRCUIT
-  const circuitData = {
+  await supabase.from("circuits").insert([{
     loop_id: loop.id,
-    circuit_name: circuit_name.value,
+    circuit_name: equipment.value,
     material: material.value,
     temperature,
     sulfur: sulfur.checked,
     chloride: chloride.checked,
     design_thickness: Number(design_thk.value),
     minimum_thickness: Number(min_thk.value)
-  };
+  }]);
 
-  const { error: circuitError } = await supabase
-    .from("circuits")
-    .insert([circuitData]);
-
-  if (circuitError) {
-    alert("Circuit save error");
-    return;
-  }
-
-  alert("✅ Loop reused/created + Circuit added successfully");
+  alert("✅ Loop & Circuit created automatically");
 };
 
 loadProjects();
