@@ -8,54 +8,60 @@ window.generateReport = async () => {
   const reportSection = document.getElementById("reportSection");
   const reportDiv = document.getElementById("reportContent");
 
-  if (!reportDiv) {
-    alert("reportContent div missing");
-    return;
-  }
-
   reportSection.style.display = "block";
   reportDiv.innerHTML = "<i>Generating CCD report...</i>";
 
   /* ===============================
-     FETCH PROJECT
+     ACTIVE PROJECT
   ================================ */
-  const { data: projects } = await supabase
-    .from('projects')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(1);
+  const projectId = localStorage.getItem("active_project");
 
-  if (!projects || projects.length === 0) {
-    reportDiv.innerHTML = "❌ No project found";
+  if (!projectId) {
+    reportDiv.innerHTML = "❌ No active project found";
     return;
   }
 
-  const project = projects[0];
+  /* ===============================
+     FETCH PROJECT
+  ================================ */
+  const { data: project, error: pErr } = await supabase
+    .from('ccd_projects')
+    .select('*')
+    .eq('id', projectId)
+    .single();
+
+  if (pErr || !project) {
+    reportDiv.innerHTML = "❌ Project not found";
+    return;
+  }
 
   /* ===============================
      FETCH LOOPS → CIRCUITS → DAMAGE
   ================================ */
-  const { data: loops } = await supabase
-    .from('systems')
+  const { data: loops, error: lErr } = await supabase
+    .from('corrosion_systems')
     .select(`
       id,
-      name,
-      description,
+      system_name,
+      process_description,
       circuits (
         id,
-        name,
+        circuit_name,
         material,
-        temp,
-        pressure,
+        operating_temp,
+        operating_pressure,
         circuit_damage_map (
-          damage_mechanisms_master ( name, api_reference )
+          damage_mechanisms_master (
+            name,
+            api_reference
+          )
         )
       )
     `)
     .eq('project_id', project.id);
 
-  if (!loops || loops.length === 0) {
-    reportDiv.innerHTML = "❌ No loops found";
+  if (lErr || !loops || loops.length === 0) {
+    reportDiv.innerHTML = "❌ No corrosion loops found";
     return;
   }
 
@@ -64,30 +70,31 @@ window.generateReport = async () => {
   ================================ */
   let html = `
     <h3>📄 Corrosion Control Document (CCD)</h3>
-
-    <b>Plant:</b> ${project.plant}<br>
-    <b>Unit:</b> ${project.unit}<br>
+    <b>Plant:</b> ${project.plant_name}<br>
+    <b>Unit:</b> ${project.unit_name}<br>
     <hr>
   `;
 
   loops.forEach((loop, i) => {
+
     html += `
-      <h4>${i + 1}. Loop / System: ${loop.name}</h4>
-      <p>${loop.description || ""}</p>
+      <h4>${i + 1}. Corrosion Loop: ${loop.system_name}</h4>
+      <p>${loop.process_description || ""}</p>
     `;
 
     if (!loop.circuits || loop.circuits.length === 0) {
-      html += `<i>No circuits defined</i>`;
+      html += `<i>No circuits defined</i><hr>`;
       return;
     }
 
     loop.circuits.forEach((circuit, j) => {
+
       html += `
         <div style="margin-left:20px">
-          <b>${i + 1}.${j + 1} Circuit:</b> ${circuit.name}<br>
+          <b>${i + 1}.${j + 1} Circuit:</b> ${circuit.circuit_name}<br>
           Material: ${circuit.material}<br>
-          Operating Temp: ${circuit.temp} °C<br>
-          Pressure: ${circuit.pressure} bar<br>
+          Operating Temp: ${circuit.operating_temp ?? "-"} °C<br>
+          Operating Pressure: ${circuit.operating_pressure ?? "-"} bar<br>
 
           <u>Damage Mechanisms:</u>
           <ul>
