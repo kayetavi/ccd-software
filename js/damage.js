@@ -30,14 +30,16 @@ window.selectCircuitForDamage = async (circuitId) => {
   `;
 
   hideDamageSummary();
+  hideReportSection();
 
   await loadDamageMechanisms();
 
-  // ✅ IMPORTANT: wait for DOM render
+  // wait for DOM
   await new Promise(requestAnimationFrame);
 
   await markSelectedDamages();
   await refreshDamageSummary();
+  showReportIfReady();
 };
 
 
@@ -60,7 +62,7 @@ async function loadDamageMechanisms() {
   }
 
   if (!data || data.length === 0) {
-    div.innerHTML = "<i>No damage mechanisms found in master table</i>";
+    div.innerHTML = "<i>No damage mechanisms found</i>";
     return;
   }
 
@@ -87,12 +89,12 @@ async function markSelectedDamages() {
 
   if (!activeCircuitId) return;
 
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from('circuit_damage_map')
     .select('damage_mechanism_id')
     .eq('circuit_id', activeCircuitId);
 
-  if (error || !data) return;
+  if (!data) return;
 
   data.forEach(row => {
     const cb = document.getElementById(`dm-${row.damage_mechanism_id}`);
@@ -135,6 +137,7 @@ window.toggleDamage = async (damageId, checked) => {
   }
 
   await refreshDamageSummary();
+  showReportIfReady();
 };
 
 
@@ -148,15 +151,16 @@ async function refreshDamageSummary() {
 
   if (!summaryBox || !list || !activeCircuitId) return;
 
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from('circuit_damage_map')
     .select(`
       damage_mechanisms_master ( name )
     `)
     .eq('circuit_id', activeCircuitId);
 
-  if (error || !data || data.length === 0) {
+  if (!data || data.length === 0) {
     hideDamageSummary();
+    hideReportSection();
     return;
   }
 
@@ -166,6 +170,24 @@ async function refreshDamageSummary() {
   });
 
   summaryBox.style.display = "block";
+}
+
+
+/* ===============================
+   REPORT VISIBILITY LOGIC
+================================ */
+function showReportIfReady() {
+
+  const report = document.getElementById("reportSection");
+  if (!report) return;
+
+  // show only if at least 1 damage selected
+  report.style.display = "block";
+}
+
+function hideReportSection() {
+  const report = document.getElementById("reportSection");
+  if (report) report.style.display = "none";
 }
 
 function hideDamageSummary() {
