@@ -1,12 +1,7 @@
 import { supabase } from './supabase.js';
 
 /* ===============================
-   ACTIVE LOOP (DYNAMIC)
-================================ */
-let systemId = localStorage.getItem("active_loop");
-
-/* ===============================
-   DOM REFERENCES (SAFE)
+   DOM REFERENCES
 ================================ */
 const circuitName = document.getElementById("circuitName");
 const material = document.getElementById("material");
@@ -19,7 +14,7 @@ const circuits = document.getElementById("circuits");
 ================================ */
 window.addCircuit = async () => {
 
-  systemId = localStorage.getItem("active_loop");
+  const systemId = window.activeLoopId;
   if (!systemId) {
     alert("Please select a corrosion loop first");
     return;
@@ -46,7 +41,7 @@ window.addCircuit = async () => {
     });
 
   if (error) {
-    alert(error.message);
+    alert("Failed to add circuit: " + error.message);
     return;
   }
 
@@ -56,15 +51,14 @@ window.addCircuit = async () => {
   temp.value = "";
   pressure.value = "";
 
-  loadCircuits();
+  loadCircuits(systemId);
 };
 
 /* ===============================
    LOAD CIRCUITS
 ================================ */
-window.loadCircuits = async () => {
+window.loadCircuits = async (systemId = window.activeLoopId) => {
 
-  systemId = localStorage.getItem("active_loop");
   if (!systemId || !circuits) return;
 
   const { data, error } = await supabase
@@ -74,13 +68,13 @@ window.loadCircuits = async () => {
     .order('created_at', { ascending: true });
 
   if (error) {
-    alert(error.message);
+    alert("Failed to load circuits: " + error.message);
     return;
   }
 
   circuits.innerHTML = "";
 
-  // 🔒 hide damage section until circuit selected
+  // hide damage until circuit selected
   const damageSection = document.getElementById("damageSection");
   if (damageSection) damageSection.style.display = "none";
 
@@ -109,29 +103,19 @@ window.loadCircuits = async () => {
    SELECT CIRCUIT
 ================================ */
 window.selectCircuit = (circuitId) => {
+
   if (!circuitId) return;
 
-  // save active circuit
-  localStorage.setItem("active_circuit", circuitId);
+  // ✅ in-memory active circuit
+  window.activeCircuitId = circuitId;
 
-  // 🔥 step tracking (VERY IMPORTANT)
-  localStorage.setItem("ccd_step", "damage");
-
-  // show damage section
-  const damageSection = document.getElementById("damageSection");
-  if (damageSection) {
-    damageSection.style.display = "block";
+  // open DAMAGE tab
+  if (window.openTab) {
+    window.openTab("damageSection");
   }
 
-  // notify damage.js
+  // notify damage module
   if (window.selectCircuitForDamage) {
     window.selectCircuitForDamage(circuitId);
   }
 };
-
-/* ===============================
-   INITIAL LOAD
-================================ */
-if (systemId) {
-  loadCircuits();
-}
