@@ -1,143 +1,48 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
   <title>CCD Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      max-width: 900px;
-    }
-
-    h2, h3 {
-      border-bottom: 1px solid #000;
-      padding-bottom: 4px;
-    }
-
-    label {
-      font-weight: bold;
-    }
-
-    input, select, button {
-      padding: 6px;
-      width: 100%;
-      max-width: 400px;
-      margin-top: 4px;
-    }
-
-    button {
-      width: auto;
-      margin-top: 15px;
-      cursor: pointer;
-    }
-
-    hr {
-      margin: 25px 0;
-    }
-  </style>
 </head>
 
 <body>
 
 <h2>CCD Data Entry Dashboard</h2>
 
-<!-- ================= PROJECT ================= -->
-<label for="project">Project</label><br>
-<select id="project">
-  <option value="">-- Select Project --</option>
-</select>
+<select id="project"></select>
 
 <hr>
 
-<!-- ================= PROCESS CONDITIONS ================= -->
 <h3>Process Conditions</h3>
+<input id="unit" placeholder="Unit"><br><br>
+<input id="fluid" placeholder="Fluid"><br><br>
 
-<label for="unit">Unit / Section</label><br>
-<input
-  id="unit"
-  placeholder="e.g. HCU"
-><br><br>
-
-<label for="fluid">Fluid</label><br>
-<input
-  id="fluid"
-  placeholder="e.g. Hydrocarbon"
-><br><br>
-
-<label for="phase">Phase</label><br>
 <select id="phase">
-  <option value="Liquid">Liquid</option>
-  <option value="Vapor">Vapor</option>
-  <option value="Mixed">Mixed</option>
-</select>
-<br><br>
+  <option>Liquid</option>
+  <option>Vapor</option>
+  <option>Mixed</option>
+</select><br><br>
 
-<label for="temp">Operating Temperature (°C)</label><br>
-<input
-  id="temp"
-  type="number"
-  placeholder="e.g. 380"
-><br><br>
+<input id="temp" type="number" placeholder="Temperature °C"><br><br>
 
-<label>
-  <input type="checkbox" id="sulfur">
-  Sulfur Present
-</label><br>
-
-<label>
-  <input type="checkbox" id="chloride">
-  Chloride Present
-</label>
+<label><input type="checkbox" id="sulfur"> Sulfur</label><br>
+<label><input type="checkbox" id="chloride"> Chloride</label>
 
 <hr>
 
-<!-- ================= CIRCUIT INFORMATION ================= -->
-<h3>Circuit Information</h3>
+<h3>Circuit</h3>
+<input id="equipment" placeholder="Equipment"><br><br>
+<input id="material" placeholder="Material"><br><br>
+<input id="design_thk" placeholder="Design Thk"><br><br>
+<input id="min_thk" placeholder="Min Thk"><br><br>
 
-<label for="equipment">Equipment / Line</label><br>
-<input
-  id="equipment"
-  placeholder="e.g. Reactor Outlet Line"
-><br><br>
+<button onclick="saveAll()">SAVE & AUTO GENERATE</button>
 
-<label for="material">Material</label><br>
-<input
-  id="material"
-  placeholder="e.g. CS, SS 316"
-><br><br>
+<hr>
+<h3>Saved Data</h3>
+<div id="data"></div>
 
-<label for="design_thk">Design Thickness (mm)</label><br>
-<input
-  id="design_thk"
-  type="number"
-  step="0.01"
-  placeholder="e.g. 12.5"
-><br><br>
-
-<label for="min_thk">Minimum Thickness (mm)</label><br>
-<input
-  id="min_thk"
-  type="number"
-  step="0.01"
-  placeholder="e.g. 6.0"
-><br><br>
-
-<button onclick="saveAll()">💾 SAVE & AUTO GENERATE</button>
-
-<br><br>
-
-<p>
-  <b>Note:</b><br>
-  Corrosion Loops, Circuits, Damage Mechanisms & Inspection Strategies
-  are generated automatically based on process conditions
-  as per <b>API RP 970</b>.
-</p>
-
-<!-- ================= SCRIPT ================= -->
 <script type="module" src="js/dashboard.js"></script>
+<script type="module" src="js/view.js"></script>
 
 </body>
 </html>
