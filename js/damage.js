@@ -1,29 +1,52 @@
-import { supabase } from './supabase.js';
+import { supabase } from "./supabase.js";
 
-const circuitId = localStorage.getItem("circuit_id");
-const list = document.getElementById("damageList");
-
-async function loadDamage() {
+/* LOAD CIRCUITS */
+async function loadCircuits() {
   const { data } = await supabase
-    .from("damage_mechanisms")
-    .select("*")
-    .eq("circuit_id", circuitId);
+    .from("circuits")
+    .select("id, circuit_name");
 
-  list.innerHTML = "";
-  data.forEach(d => {
-    list.innerHTML += `<li>${d.mechanism_name}</li>`;
+  const sel = document.getElementById("circuitSelect");
+  sel.innerHTML = `<option value="">Select Circuit</option>`;
+
+  data.forEach(c => {
+    const o = document.createElement("option");
+    o.value = c.id;
+    o.textContent = c.circuit_name;
+    sel.appendChild(o);
   });
 }
 
-window.saveDamage = async function () {
-  const name = document.getElementById("damage").value;
-  const api = document.getElementById("api").value;
+/* LOAD DAMAGE */
+async function loadDamage(cid) {
+  const { data, error } = await supabase
+    .from("circuit_damage_mechanisms")
+    .select("*")
+    .eq("circuit_id", cid);
 
-  await supabase.from("damage_mechanisms").insert([
-    { circuit_id: circuitId, mechanism_name: name, api_reference: api }
-  ]);
+  if (error) {
+    console.error(error);
+    return;
+  }
 
-  loadDamage();
-};
+  const tbody = document.getElementById("damageTable");
+  tbody.innerHTML = "";
 
-loadDamage();
+  data.forEach(d => {
+    tbody.innerHTML += `
+      <tr>
+        <td>${d.damage_mechanism}</td>
+        <td>${d.likelihood}</td>
+        <td>${d.inspection_focus}</td>
+        <td>${d.api_reference}</td>
+      </tr>
+    `;
+  });
+}
+
+document.getElementById("circuitSelect")
+  .addEventListener("change", e => {
+    if (e.target.value) loadDamage(e.target.value);
+  });
+
+loadCircuits();
