@@ -155,10 +155,15 @@ window.openLoop = (loopId) => {
 
   showSection("circuitSection");
 
+  // 🔥 hide report until ready
+  const report = document.getElementById("reportSection");
+  if (report) report.style.display = "none";
+
   if (window.loadCircuits) {
     window.loadCircuits();
   }
 };
+
 
 /* ===============================
    HELPER: SHOW SECTION SAFELY
@@ -167,3 +172,11 @@ function showSection(sectionId) {
   const el = document.getElementById(sectionId);
   if (el) el.style.display = "block";
 }
+
+
+window.showReportSection = () => {
+  const report = document.getElementById("reportSection");
+  if (report) {
+    report.style.display = "block";
+  }
+};
