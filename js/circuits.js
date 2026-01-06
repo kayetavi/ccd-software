@@ -1,35 +1,42 @@
 import { supabase } from './supabase.js';
 
-const loopId = localStorage.getItem("loop_id");
-const circuitList = document.getElementById("circuitList");
+const systemId = localStorage.getItem("system_id");
+
+window.addCircuit = async () => {
+  const { error } = await supabase
+    .from('circuits')
+    .insert({
+      system_id: systemId,
+      circuit_name: circuitName.value,
+      material: material.value,
+      operating_temp: temp.value,
+      operating_pressure: pressure.value
+    });
+
+  if (!error) loadCircuits();
+  else alert(error.message);
+};
 
 async function loadCircuits() {
   const { data } = await supabase
-    .from("circuits")
-    .select("*")
-    .eq("loop_id", loopId);
+    .from('circuits')
+    .select('*')
+    .eq('system_id', systemId);
 
-  circuitList.innerHTML = "";
+  circuits.innerHTML = "";
   data.forEach(c => {
-    circuitList.innerHTML +=
-      `<li onclick="selectCircuit('${c.id}')">${c.circuit_name}</li>`;
+    circuits.innerHTML += `
+      <div class="box">
+        <b>${c.circuit_name}</b><br>
+        ${c.material} | ${c.operating_temp}°C
+      </div>`;
   });
 }
 
-window.saveCircuit = async function () {
-  const name = document.getElementById("circuit").value;
-  const material = document.getElementById("material").value;
-
-  await supabase.from("circuits").insert([
-    { loop_id: loopId, circuit_name: name, material }
-  ]);
-
-  loadCircuits();
-};
-
-window.selectCircuit = function (id) {
-  localStorage.setItem("circuit_id", id);
-  location.href = "damage.html";
-};
-
 loadCircuits();
+
+const circuitName = document.getElementById("circuitName");
+const material = document.getElementById("material");
+const temp = document.getElementById("temp");
+const pressure = document.getElementById("pressure");
+const circuits = document.getElementById("circuits");
