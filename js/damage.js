@@ -10,7 +10,7 @@ async function loadCircuits() {
   sel.innerHTML = `<option value="">Select Circuit</option>`;
 
   data.forEach(c => {
-    const o = document.createElement("option");
+    const o = document.createElement("option"); 
     o.value = c.id;
     o.textContent = c.circuit_name;
     sel.appendChild(o);
