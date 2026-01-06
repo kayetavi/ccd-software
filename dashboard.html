@@ -32,29 +32,37 @@
 <div id="circuitSection" class="box" style="display:none">
   <h3>3️⃣ Circuits</h3>
 
-  <input id="circuitName" placeholder="Circuit Name">
-  <input id="material" placeholder="Material">
-  <input id="temp" placeholder="Temp (°C)">
-  <input id="pressure" placeholder="Pressure (bar)">
+  <input id="circuitName" placeholder="Circuit Name (e.g. 04-P-LC-01)">
+  <input id="material" placeholder="Material (e.g. CS)">
+  <input id="temp" placeholder="Operating Temp (°C)">
+  <input id="pressure" placeholder="Operating Pressure (bar)">
+
   <button onclick="addCircuit()">Add Circuit</button>
 
-  <div id="circuits"></div>
+  <div id="circuits">
+    <i>No circuits added yet</i>
+  </div>
 </div>
 
 <!-- ================= DAMAGE ================= -->
 <div id="damageSection" class="box" style="display:none">
   <h3>4️⃣ Damage Mechanisms</h3>
 
-  <div id="damageList"></div>
+  <p>Select applicable damage mechanisms based on API 571</p>
 
-  <!-- Damage Summary -->
+  <div id="damageList">
+    <i>Select a circuit to assign damage mechanisms</i>
+  </div>
+
+  <!-- DAMAGE SUMMARY -->
   <div id="damageSummary" style="margin-top:15px; display:none">
     <h4>Selected Damage Mechanisms</h4>
     <ul id="damageSummaryList"></ul>
   </div>
 
-  <!-- ✅ GENERATE REPORT BUTTON (CORRECT PLACE) -->
+  <!-- ✅ GENERATE REPORT BUTTON -->
   <button
+    id="generateReportBtn"
     style="margin-top:15px"
     onclick="window.generateReport()">
     Generate CCD Report
@@ -68,7 +76,7 @@
 </div>
 
 <!-- ================= SCRIPTS ================= -->
-<script type="module" src="js/dashboard.js"></script>
+<script type="module" src="js/project.js"></script>
 <script type="module" src="js/systems.js"></script>
 <script type="module" src="js/circuits.js"></script>
 <script type="module" src="js/damage.js"></script>
