@@ -1,91 +1,84 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>CCD Maker Dashboard</title>
+  <title>CCD Pro Dashboard</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-<h2>CCD Maker – Single Dashboard</h2>
+<div class="app">
 
+  <!-- ========== SIDEBAR ========== -->
+  <aside class="sidebar">
+    <h2 class="logo">CCD Pro</h2>
 
-  <!-- ================= TABS ================= -->
-<div class="tabs">
-  <button class="tab active" onclick="openTab('projectSection')">Project</button>
-  <button class="tab" onclick="openTab('loopSection')">Corrosion Loops</button>
-  <button class="tab" onclick="openTab('circuitSection')">Circuits</button>
-  <button class="tab" onclick="openTab('damageSection')">Damage</button>
-  <button class="tab" onclick="openTab('reportSection')">Report</button>
+    <nav>
+      <button class="tab active" data-target="projectSection"
+        onclick="openTab('projectSection', this)">📁 Project</button>
+
+      <button class="tab" data-target="loopSection"
+        onclick="openTab('loopSection', this)">🔁 Corrosion Loop</button>
+
+      <button class="tab" data-target="circuitSection"
+        onclick="openTab('circuitSection', this)">🧩 Circuit</button>
+
+      <button class="tab" data-target="damageSection"
+        onclick="openTab('damageSection', this)">⚠️ Damage</button>
+
+      <button class="tab" data-target="reportSection"
+        onclick="openTab('reportSection', this)">📄 CCD Report</button>
+    </nav>
+  </aside>
+
+  <!-- ========== MAIN CONTENT ========== -->
+  <main class="content">
+
+    <!-- PROJECT -->
+    <section id="projectSection" class="box">
+      <h3>Project</h3>
+      <input id="plant" placeholder="Plant Name">
+      <input id="unit" placeholder="Process Unit">
+      <button onclick="createProject()">Create Project</button>
+      <p id="projectStatus"></p>
+    </section>
+
+    <!-- LOOPS -->
+    <section id="loopSection" class="box" style="display:none">
+      <h3>Corrosion Loops</h3>
+      <input id="systemName" placeholder="Loop / System Name">
+      <textarea id="systemDesc" placeholder="Process description"></textarea>
+      <button onclick="addSystem()">Add Loop</button>
+      <div id="systems"></div>
+    </section>
+
+    <!-- CIRCUITS -->
+    <section id="circuitSection" class="box" style="display:none">
+      <h3>Circuits</h3>
+      <input id="circuitName" placeholder="Circuit Name">
+      <input id="material" placeholder="Material">
+      <input id="temp" placeholder="Temp (°C)">
+      <input id="pressure" placeholder="Pressure (bar)">
+      <button onclick="addCircuit()">Add Circuit</button>
+      <div id="circuits"></div>
+    </section>
+
+    <!-- DAMAGE -->
+    <section id="damageSection" class="box" style="display:none">
+      <h3>Damage Mechanisms</h3>
+      <div id="damageList"></div>
+      <button onclick="generateReport()">Generate Report</button>
+    </section>
+
+    <!-- REPORT -->
+    <section id="reportSection" class="box" style="display:none">
+      <h3>CCD Report</h3>
+      <div id="reportContent"></div>
+    </section>
+
+  </main>
 </div>
 
-<!-- ================= PROJECT ================= -->
-<div id="projectSection" class="box">
-  <h3>1️⃣ Project</h3>
-  <input id="plant" placeholder="Plant Name">
-  <input id="unit" placeholder="Process Unit">
-  <button onclick="createProject()">Create Project</button>
-  <p id="projectStatus"></p>
-</div>
-
-<!-- ================= LOOPS ================= -->
-<div id="loopSection" class="box" style="display:none">
-  <h3>2️⃣ Corrosion Loops</h3>
-
-  <input id="systemName" placeholder="Loop / System Name">
-  <textarea id="systemDesc" placeholder="Process description"></textarea>
-  <button onclick="addSystem()">Add Loop</button>
-
-  <div id="systems"></div>
-</div>
-
-<!-- ================= CIRCUITS ================= -->
-<div id="circuitSection" class="box" style="display:none">
-  <h3>3️⃣ Circuits</h3>
-
-  <input id="circuitName" placeholder="Circuit Name (e.g. 04-P-LC-01)">
-  <input id="material" placeholder="Material (e.g. CS)">
-  <input id="temp" placeholder="Operating Temp (°C)">
-  <input id="pressure" placeholder="Operating Pressure (bar)">
-
-  <button onclick="addCircuit()">Add Circuit</button>
-
-  <div id="circuits">
-    <i>No circuits added yet</i>
-  </div>
-</div>
-
-<!-- ================= DAMAGE ================= -->
-<div id="damageSection" class="box" style="display:none">
-  <h3>4️⃣ Damage Mechanisms</h3>
-
-  <p>Select applicable damage mechanisms based on API 571</p>
-
-  <div id="damageList">
-    <i>Select a circuit to assign damage mechanisms</i>
-  </div>
-
-  <!-- DAMAGE SUMMARY -->
-  <div id="damageSummary" style="margin-top:15px; display:none">
-    <h4>Selected Damage Mechanisms</h4>
-    <ul id="damageSummaryList"></ul>
-  </div>
-
-  <!-- ✅ GENERATE REPORT BUTTON -->
-  <button
-    id="generateReportBtn"
-    style="margin-top:15px"
-    onclick="window.generateReport()">
-    Generate CCD Report
-  </button>
-</div>
-
-<!-- ================= REPORT ================= -->
-<div id="reportSection" class="box" style="display:none">
-  <h3>5️⃣ CCD Report</h3>
-  <div id="reportContent"></div>
-</div>
-
-<!-- ================= SCRIPTS ================= -->
+<!-- SCRIPTS -->
 <script type="module" src="js/project.js"></script>
 <script type="module" src="js/systems.js"></script>
 <script type="module" src="js/circuits.js"></script>
