@@ -60,8 +60,7 @@ window.loadCircuits = async () => {
   const { data, error } = await supabase
     .from('circuits')
     .select('*')
-    .eq('system_id', systemId)
-    .order('created_at');
+    .eq('system_id', systemId);
 
   if (error) {
     alert(error.message);
@@ -90,6 +89,7 @@ window.loadCircuits = async () => {
     `;
   });
 };
+
 
 /* ===============================
    SELECT CIRCUIT
