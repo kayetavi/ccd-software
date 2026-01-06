@@ -154,9 +154,15 @@ window.saveAll = async function () {
     alert("✅ Loop, Circuit & API 970 Damage generated successfully");
 
   } catch (err) {
-    console.error("SAVE ERROR:", err);
-    alert("❌ Unexpected error occurred");
+  console.error("SAVE ERROR FULL:", err);
+
+  if (err?.message) {
+    alert("❌ ERROR: " + err.message);
+  } else {
+    alert("❌ ERROR: Check console (F12)");
   }
+}
+
 };
 
 /* ================= INIT ================= */
