@@ -2,7 +2,23 @@ body {
   font-family: Arial;
   padding: 20px;
 }
-input, button {
+
+input, textarea, button {
+  display: block;
+  margin: 8px 0;
   padding: 8px;
-  margin: 5px;
+  width: 300px;
+}
+
+button {
+  background: #0a66c2;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.box {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin: 5px 0;
 }
