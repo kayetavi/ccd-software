@@ -28,7 +28,7 @@ window.addSystem = async () => {
     });
 
   if (error) {
-    alert(error.message);
+    alert("Failed to add loop: " + error.message);
     return;
   }
 
@@ -36,42 +36,37 @@ window.addSystem = async () => {
   systemName.value = "";
   systemDesc.value = "";
 
-  // reload loop list (safe)
+  // reload loops from Supabase
   if (window.loadSystems) {
     window.loadSystems();
   }
 };
 
 /* ===============================
-   OPEN LOOP (SAME DASHBOARD)
+   OPEN LOOP (SUPABASE FLOW)
 ================================ */
 window.openLoop = (loopId) => {
 
   if (!loopId) return;
 
-  // ✅ save active loop
-  localStorage.setItem("active_loop", loopId);
+  // ✅ in-memory active loop (NOT localStorage)
+  window.activeLoopId = loopId;
 
-  // ✅ show CIRCUITS section
-  const circuitSection = document.getElementById("circuitSection");
-  if (circuitSection) {
-    circuitSection.style.display = "block";
-    circuitSection.scrollIntoView({ behavior: "smooth" });
+  // open Circuits tab
+  if (window.openTab) {
+    window.openTab("circuitSection");
   }
 
-  // reset DAMAGE & REPORT until circuit selected
+  // hide damage & report until circuit selected
   const damageSection = document.getElementById("damageSection");
   const reportSection = document.getElementById("reportSection");
 
   if (damageSection) damageSection.style.display = "none";
   if (reportSection) reportSection.style.display = "none";
 
-  // clear old data (optional but recommended)
-  localStorage.removeItem("active_circuit");
-
-  // load circuits for this loop
+  // load circuits for selected loop
   if (window.loadCircuits) {
-    window.loadCircuits();
+    window.loadCircuits(loopId);
   }
 };
 
