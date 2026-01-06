@@ -56,7 +56,7 @@ window.createProject = async () => {
   }
 
   lockProjectInputs();
-  showSection("loopSection");
+  openTab("loopSection");
 
   loadSystems();
 };
@@ -90,7 +90,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 
   lockProjectInputs();
-  showSection("loopSection");
+  openTab("loopSection");
 
   loadSystems();
 });
