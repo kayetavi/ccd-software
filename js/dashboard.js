@@ -35,6 +35,7 @@ function getTempBand(temp) {
 async function getOrCreateLoop(input) {
   const tempBand = getTempBand(input.temperature);
 
+  // 🔴 temp_band FILTER REMOVED (AVOIDS 400 ERROR)
   const { data: loops, error } = await supabase
     .from("corrosion_loops")
     .select("*")
@@ -43,7 +44,6 @@ async function getOrCreateLoop(input) {
     .eq("phase", input.phase)
     .eq("sulfur", input.sulfur)
     .eq("chloride", input.chloride)
-    .eq("temp_band", tempBand)
     .limit(1);
 
   if (error) {
@@ -51,7 +51,7 @@ async function getOrCreateLoop(input) {
     throw error;
   }
 
-  /* EXISTING LOOP */
+  /* EXISTING LOOP FOUND */
   if (loops && loops.length > 0) {
     return loops[0];
   }
@@ -64,7 +64,7 @@ async function getOrCreateLoop(input) {
       loop_name: `${input.unit} ${tempBand} TEMP LOOP`,
       fluid: input.fluid,
       phase: input.phase,
-      temp_band: tempBand,
+      temp_band: tempBand, // ✅ ONLY INSERT
       sulfur: input.sulfur,
       chloride: input.chloride
     }])
@@ -159,5 +159,5 @@ window.saveAll = async function () {
   }
 };
 
-/* INIT */
+/* ================= INIT ================= */
 loadProjects();
