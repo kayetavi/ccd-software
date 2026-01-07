@@ -8,24 +8,19 @@ window.activeLoopId = null;
 window.activeCircuitId = null;
 
 /* ===============================
-   CREATE PROJECT
+   CREATE PROJECT (NO DELETE)
 ================================ */
 window.createProject = async () => {
-  const plantEl = document.getElementById("plant");
-  const unitEl = document.getElementById("unit");
-
-  const plant = plantEl?.value.trim();
-  const unit = unitEl?.value.trim();
+  const plant = document.getElementById("plant")?.value.trim();
+  const unit = document.getElementById("unit")?.value.trim();
 
   if (!plant || !unit) {
     alert("Plant and Unit are required");
     return;
   }
 
-  const { data: { user }, error: userError } =
-    await supabase.auth.getUser();
-
-  if (userError || !user) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
     alert("User not logged in");
     return;
   }
@@ -41,15 +36,16 @@ window.createProject = async () => {
     .single();
 
   if (error) {
-    alert("Project create failed: " + error.message);
+    alert(error.message);
     return;
   }
 
   activateProject(data);
+  loadProjectList(); // 🔥 refresh list
 };
 
 /* ===============================
-   ACTIVATE PROJECT (CORE LOGIC)
+   ACTIVATE PROJECT (CORE)
 ================================ */
 function activateProject(project) {
   currentProjectId = project.id;
@@ -68,42 +64,61 @@ function activateProject(project) {
 }
 
 /* ===============================
-   LOAD LAST PROJECT ON LOGIN
+   LOAD PROJECT LIST (ALL PROJECTS)
 ================================ */
-window.addEventListener("DOMContentLoaded", async () => {
+window.loadProjectList = async () => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
 
-  const { data: project } = await supabase
+  const { data, error } = await supabase
     .from("ccd_projects")
     .select("*")
     .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .single();
+    .order("created_at", { ascending: false });
 
-  if (!project) return;
+  if (error) return;
 
-  activateProject(project);
-});
+  const select = document.getElementById("projectSelect");
+  if (!select) return;
+
+  select.innerHTML = `<option value="">-- Select Project --</option>`;
+
+  data.forEach(p => {
+    select.innerHTML += `
+      <option value="${p.id}">
+        ${p.plant_name} – ${p.unit_name}
+      </option>
+    `;
+  });
+};
 
 /* ===============================
-   RESET PROJECT (NEW PROJECT FLOW)
+   SWITCH PROJECT
 ================================ */
-window.resetProject = () => {
-  currentProjectId = null;
-  window.activeLoopId = null;
-  window.activeCircuitId = null;
+window.switchProject = async () => {
+  const projectId = document.getElementById("projectSelect")?.value;
+  if (!projectId) return;
 
-  document.getElementById("plant").value = "";
-  document.getElementById("unit").value = "";
-  document.getElementById("projectStatus").innerText = "";
+  const { data, error } = await supabase
+    .from("ccd_projects")
+    .select("*")
+    .eq("id", projectId)
+    .single();
 
-  unlockProjectInputs();
-  clearAllSections();
+  if (error || !data) {
+    alert("Project not found");
+    return;
+  }
 
-  openTab("projectSection");
+  activateProject(data);
 };
+
+/* ===============================
+   LOAD LAST PROJECT (OPTIONAL)
+================================ */
+window.addEventListener("DOMContentLoaded", async () => {
+  loadProjectList();
+});
 
 /* ===============================
    LOAD CORROSION LOOPS
@@ -125,7 +140,7 @@ window.loadSystems = async () => {
   const container = document.getElementById("systems");
   container.innerHTML = "";
 
-  if (!data || data.length === 0) {
+  if (!data.length) {
     container.innerHTML = "<i>No loops added yet</i>";
     return;
   }
@@ -145,8 +160,6 @@ window.loadSystems = async () => {
    OPEN LOOP
 ================================ */
 window.openLoop = (loopId) => {
-  if (!loopId) return;
-
   window.activeLoopId = loopId;
   window.activeCircuitId = null;
 
@@ -177,8 +190,7 @@ window.openTab = (sectionId) => {
     if (el) el.style.display = "none";
   });
 
-  const active = document.getElementById(sectionId);
-  if (active) active.style.display = "block";
+  document.getElementById(sectionId).style.display = "block";
 
   document.querySelectorAll(".tab").forEach(tab =>
     tab.classList.remove("active")
@@ -193,31 +205,18 @@ window.openTab = (sectionId) => {
    UI HELPERS
 ================================ */
 function lockProjectInputs() {
-  document.getElementById("plant").disabled = true;
-  document.getElementById("unit").disabled = true;
-}
-
-function unlockProjectInputs() {
-  document.getElementById("plant").disabled = false;
-  document.getElementById("unit").disabled = false;
-}
-
-function clearAllSections() {
-  hideSection("loopSection");
-  hideSection("circuitSection");
-  hideSection("damageSection");
-  hideSection("reportSection");
-
-  document.getElementById("systems").innerHTML = "";
-  document.getElementById("circuits").innerHTML = "";
-  document.getElementById("damageList").innerHTML = "";
-  document.getElementById("reportContent").innerHTML = "";
+  plant.disabled = true;
+  unit.disabled = true;
 }
 
 function resetLowerFlow() {
   window.activeLoopId = null;
   window.activeCircuitId = null;
-  clearAllSections();
+
+  hideSection("loopSection");
+  hideSection("circuitSection");
+  hideSection("damageSection");
+  hideSection("reportSection");
 }
 
 function hideSection(id) {
