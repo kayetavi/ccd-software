@@ -153,3 +153,9 @@ hr {
   background: #1f2937;
   border-radius: 10px;
 }
+
+
+/* ================= PDF PAGE BAKER ================= */
+.page-break {
+  page-break-before: always;
+}
