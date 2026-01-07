@@ -151,27 +151,32 @@ window.updateProject = async () => {
    LOAD PROJECT LIST (USER BASED)
 ================================ */
 window.loadProjectList = async () => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
+  const admin = await isSuperAdmin();
 
-  const { data } = await supabase
-    .from("project_users")
-    .select(`
-      project_id,
-      ccd_projects ( plant_name, unit_name )
-    `)
-    .eq("user_id", user.id);
+  const { data } = admin
+    ? await supabase.from("ccd_projects").select("*")
+    : await supabase
+        .from("project_users")
+        .select(`
+          project_id,
+          ccd_projects ( plant_name, unit_name )
+        `);
 
   const select = document.getElementById("projectSelect");
   select.innerHTML = `<option value="">-- Select Project --</option>`;
 
   data.forEach(p => {
+    const project = admin ? p : p.ccd_projects;
+    const id = admin ? p.id : p.project_id;
+
     select.innerHTML += `
-      <option value="${p.project_id}">
-        ${p.ccd_projects.plant_name} – ${p.ccd_projects.unit_name}
-      </option>`;
+      <option value="${id}">
+        ${project.plant_name} – ${project.unit_name}
+      </option>
+    `;
   });
 };
+
 
 /* ===============================
    SWITCH PROJECT
