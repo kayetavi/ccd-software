@@ -32,7 +32,7 @@ window.generateReport = async () => {
   }
 
   /* ===============================
-     FETCH LOOPS → CIRCUITS → DAMAGE → INSPECTION
+     FETCH FULL CCD STRUCTURE
   ================================ */
   const { data: loops, error: lErr } = await supabase
     .from("corrosion_systems")
@@ -57,7 +57,10 @@ window.generateReport = async () => {
         ),
 
         circuit_inspections (
-          inspection_techniques ( name )
+          inspection_techniques_master (
+            technique,
+            category
+          )
         )
       )
     `)
@@ -152,8 +155,9 @@ window.generateReport = async () => {
         html += `<li>NA</li>`;
       } else {
         inspections.forEach(i => {
-          if (!i.inspection_techniques) return;
-          html += `<li>${i.inspection_techniques.name}</li>`;
+          const tech = i.inspection_techniques_master;
+          if (!tech) return;
+          html += `<li>${tech.technique} (${tech.category})</li>`;
         });
       }
 
