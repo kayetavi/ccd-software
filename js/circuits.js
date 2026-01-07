@@ -119,3 +119,24 @@ window.selectCircuit = (circuitId) => {
     window.selectCircuitForDamage(circuitId);
   }
 };
+
+/* ===============================
+   Delete CIRCUIT
+================================ */
+window.deleteCircuit = async (circuitId) => {
+
+  if (!confirm("Delete this circuit?")) return;
+
+  const { error } = await supabase
+    .from("circuits")
+    .delete()
+    .eq("id", circuitId);
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  loadCircuits(window.activeLoopId);
+};
+
