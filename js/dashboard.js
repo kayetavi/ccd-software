@@ -26,7 +26,7 @@ window.createProject = async () => {
     return;
   }
 
-  // 1️⃣ create project
+  // 1️⃣ Create project
   const { data: project, error } = await supabase
     .from("ccd_projects")
     .insert({
@@ -42,10 +42,11 @@ window.createProject = async () => {
     return;
   }
 
-  // 2️⃣ creator = admin
+  // 2️⃣ Assign creator as ADMIN
   await supabase.from("project_users").insert({
     project_id: project.id,
     user_id: user.id,
+    email: user.email,
     role: "admin"
   });
 
@@ -74,21 +75,23 @@ async function activateProject(project) {
 }
 
 /* ===============================
-   LOAD USER ROLE (IMPORTANT)
+   LOAD USER ROLE (CORE LOGIC)
 ================================ */
 async function loadUserRole() {
-  const { data, error } = await supabase
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const { data } = await supabase
     .from("project_users")
     .select("role")
     .eq("project_id", currentProjectId)
-    .eq("user_id", (await supabase.auth.getUser()).data.user.id)
+    .eq("email", user.email)
     .single();
 
   currentUserRole = data?.role || "viewer";
 }
 
 /* ===============================
-   APPLY ROLE UI
+   APPLY ROLE RULES (UI)
 ================================ */
 function applyRoleUI() {
   const updateBtn = document.getElementById("updateProjectBtn");
@@ -103,7 +106,7 @@ function applyRoleUI() {
 }
 
 /* ===============================
-   UPDATE PROJECT
+   UPDATE PROJECT (ADMIN / EDITOR)
 ================================ */
 window.updateProject = async () => {
   if (currentUserRole === "viewer") {
@@ -116,7 +119,10 @@ window.updateProject = async () => {
 
   const { error } = await supabase
     .from("ccd_projects")
-    .update({ plant_name: plant, unit_name: unit })
+    .update({
+      plant_name: plant,
+      unit_name: unit
+    })
     .eq("id", currentProjectId);
 
   if (error) {
@@ -131,7 +137,7 @@ window.updateProject = async () => {
 };
 
 /* ===============================
-   LOAD PROJECT LIST
+   LOAD PROJECT LIST (ROLE BASED)
 ================================ */
 window.loadProjectList = async () => {
   const { data: { user } } = await supabase.auth.getUser();
@@ -142,7 +148,7 @@ window.loadProjectList = async () => {
       project_id,
       ccd_projects ( plant_name, unit_name )
     `)
-    .eq("user_id", user.id);
+    .eq("email", user.email);
 
   const select = document.getElementById("projectSelect");
   select.innerHTML = `<option value="">-- Select Project --</option>`;
@@ -174,9 +180,15 @@ window.switchProject = async () => {
 /* ===============================
    HELPERS
 ================================ */
-function plantInput() { return document.getElementById("plant"); }
-function unitInput() { return document.getElementById("unit"); }
-function projectStatus() { return document.getElementById("projectStatus"); }
+function plantInput() {
+  return document.getElementById("plant");
+}
+function unitInput() {
+  return document.getElementById("unit");
+}
+function projectStatus() {
+  return document.getElementById("projectStatus");
+}
 
 function lockProjectInputs() {
   plantInput().disabled = true;
@@ -189,8 +201,11 @@ function unlockProjectInputs() {
 }
 
 function resetLowerFlow() {
-  ["loopSection","circuitSection","damageSection","reportSection"]
-    .forEach(id => document.getElementById(id).style.display = "none");
+  ["loopSection", "circuitSection", "damageSection", "reportSection"]
+    .forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = "none";
+    });
 }
 
 /* ===============================
