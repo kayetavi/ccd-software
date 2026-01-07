@@ -58,9 +58,9 @@ async function loadStreamPhases() {
 
 async function loadInspectionTechniques() {
   const { data, error } = await supabase
-    .from("inspection_techniques")
-    .select("id, name")
-    .order("name");
+    .from("inspection_techniques_master")
+    .select("id, technique, category")
+    .order("technique");
 
   if (error) {
     alert(error.message);
@@ -73,7 +73,7 @@ async function loadInspectionTechniques() {
     inspectionList.innerHTML += `
       <label style="display:block">
         <input type="checkbox" value="${i.id}">
-        ${i.name}
+        ${i.technique} (${i.category})
       </label>
     `;
   });
@@ -136,7 +136,7 @@ window.addCircuit = async () => {
   for (const inspId of selectedInspections) {
     await supabase.from("circuit_inspections").insert({
       circuit_id: circuit.id,
-      inspection_id: inspId
+      inspection_technique_id: inspId
     });
   }
 
@@ -147,6 +147,7 @@ window.addCircuit = async () => {
   pressure.value = "";
   processFluidSelect.value = "";
   streamPhaseSelect.value = "";
+
   inspectionList
     .querySelectorAll("input")
     .forEach(i => i.checked = false);
