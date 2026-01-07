@@ -1,24 +1,31 @@
 import { supabase } from './supabase.js';
 
 /* ===============================
-   PROJECT CONTEXT (IN-MEMORY)
+   GLOBAL STATE (IN-MEMORY ONLY)
 ================================ */
 export let currentProjectId = null;
+window.activeLoopId = null;
+window.activeCircuitId = null;
 
 /* ===============================
    CREATE PROJECT
 ================================ */
 window.createProject = async () => {
-  const plant = document.getElementById("plant")?.value.trim();
-  const unit = document.getElementById("unit")?.value.trim();
+  const plantEl = document.getElementById("plant");
+  const unitEl = document.getElementById("unit");
+
+  const plant = plantEl?.value.trim();
+  const unit = unitEl?.value.trim();
 
   if (!plant || !unit) {
     alert("Plant and Unit are required");
     return;
   }
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
+  const { data: { user }, error: userError } =
+    await supabase.auth.getUser();
+
+  if (userError || !user) {
     alert("User not logged in");
     return;
   }
@@ -34,23 +41,34 @@ window.createProject = async () => {
     .single();
 
   if (error) {
-    alert(error.message);
+    alert("Project create failed: " + error.message);
     return;
   }
 
-  currentProjectId = data.id;
-
-  document.getElementById("projectStatus").innerText =
-    `Project Active: ${data.plant_name} – ${data.unit_name}`;
-
-  lockProjectInputs();
-  openTab("loopSection");
-
-  loadSystems();
+  activateProject(data);
 };
 
 /* ===============================
-   LOAD LATEST PROJECT ON LOGIN
+   ACTIVATE PROJECT (CORE LOGIC)
+================================ */
+function activateProject(project) {
+  currentProjectId = project.id;
+
+  document.getElementById("plant").value = project.plant_name;
+  document.getElementById("unit").value = project.unit_name;
+
+  document.getElementById("projectStatus").innerText =
+    `Project Active: ${project.plant_name} – ${project.unit_name}`;
+
+  lockProjectInputs();
+  resetLowerFlow();
+  openTab("loopSection");
+
+  loadSystems();
+}
+
+/* ===============================
+   LOAD LAST PROJECT ON LOGIN
 ================================ */
 window.addEventListener("DOMContentLoaded", async () => {
   const { data: { user } } = await supabase.auth.getUser();
@@ -66,21 +84,29 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   if (!project) return;
 
-  currentProjectId = project.id;
-
-  document.getElementById("plant").value = project.plant_name;
-  document.getElementById("unit").value = project.unit_name;
-  document.getElementById("projectStatus").innerText =
-    `Project Active: ${project.plant_name} – ${project.unit_name}`;
-
-  lockProjectInputs();
-  openTab("loopSection");
-
-  loadSystems();
+  activateProject(project);
 });
 
 /* ===============================
-   LOAD LOOPS
+   RESET PROJECT (NEW PROJECT FLOW)
+================================ */
+window.resetProject = () => {
+  currentProjectId = null;
+  window.activeLoopId = null;
+  window.activeCircuitId = null;
+
+  document.getElementById("plant").value = "";
+  document.getElementById("unit").value = "";
+  document.getElementById("projectStatus").innerText = "";
+
+  unlockProjectInputs();
+  clearAllSections();
+
+  openTab("projectSection");
+};
+
+/* ===============================
+   LOAD CORROSION LOOPS
 ================================ */
 window.loadSystems = async () => {
   if (!currentProjectId) return;
@@ -99,7 +125,7 @@ window.loadSystems = async () => {
   const container = document.getElementById("systems");
   container.innerHTML = "";
 
-  if (!data.length) {
+  if (!data || data.length === 0) {
     container.innerHTML = "<i>No loops added yet</i>";
     return;
   }
@@ -116,27 +142,23 @@ window.loadSystems = async () => {
 };
 
 /* ===============================
-   OPEN LOOP (NO localStorage)
+   OPEN LOOP
 ================================ */
 window.openLoop = (loopId) => {
   if (!loopId) return;
 
-  window.activeLoopId = loopId; // in-memory only
+  window.activeLoopId = loopId;
+  window.activeCircuitId = null;
 
   openTab("circuitSection");
+
+  hideSection("damageSection");
+  hideSection("reportSection");
 
   if (window.loadCircuits) {
     window.loadCircuits(loopId);
   }
 };
-
-/* ===============================
-   UI HELPERS
-================================ */
-function lockProjectInputs() {
-  document.getElementById("plant").disabled = true;
-  document.getElementById("unit").disabled = true;
-}
 
 /* ===============================
    TAB NAVIGATION
@@ -155,7 +177,8 @@ window.openTab = (sectionId) => {
     if (el) el.style.display = "none";
   });
 
-  document.getElementById(sectionId).style.display = "block";
+  const active = document.getElementById(sectionId);
+  if (active) active.style.display = "block";
 
   document.querySelectorAll(".tab").forEach(tab =>
     tab.classList.remove("active")
@@ -165,3 +188,39 @@ window.openTab = (sectionId) => {
     .querySelector(`.tab[data-target="${sectionId}"]`)
     ?.classList.add("active");
 };
+
+/* ===============================
+   UI HELPERS
+================================ */
+function lockProjectInputs() {
+  document.getElementById("plant").disabled = true;
+  document.getElementById("unit").disabled = true;
+}
+
+function unlockProjectInputs() {
+  document.getElementById("plant").disabled = false;
+  document.getElementById("unit").disabled = false;
+}
+
+function clearAllSections() {
+  hideSection("loopSection");
+  hideSection("circuitSection");
+  hideSection("damageSection");
+  hideSection("reportSection");
+
+  document.getElementById("systems").innerHTML = "";
+  document.getElementById("circuits").innerHTML = "";
+  document.getElementById("damageList").innerHTML = "";
+  document.getElementById("reportContent").innerHTML = "";
+}
+
+function resetLowerFlow() {
+  window.activeLoopId = null;
+  window.activeCircuitId = null;
+  clearAllSections();
+}
+
+function hideSection(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = "none";
+}
