@@ -14,19 +14,19 @@
 
     <nav>
       <button class="tab active" data-target="projectSection"
-        onclick="openTab('projectSection', this)">📁 Project</button>
+        onclick="openTab('projectSection')">📁 Project</button>
 
       <button class="tab" data-target="loopSection"
-        onclick="openTab('loopSection', this)">🔁 Corrosion Loops</button>
+        onclick="openTab('loopSection')">🔁 Corrosion Loops</button>
 
       <button class="tab" data-target="circuitSection"
-        onclick="openTab('circuitSection', this)">🧩 Circuits</button>
+        onclick="openTab('circuitSection')">🧩 Circuits</button>
 
       <button class="tab" data-target="damageSection"
-        onclick="openTab('damageSection', this)">⚠️ Damage</button>
+        onclick="openTab('damageSection')">⚠️ Damage</button>
 
       <button class="tab" data-target="reportSection"
-        onclick="openTab('reportSection', this)">📄 CCD Report</button>
+        onclick="openTab('reportSection')">📄 CCD Report</button>
     </nav>
   </aside>
 
@@ -37,19 +37,24 @@
     <section id="projectSection" class="box">
       <h3>Project</h3>
 
+      <!-- 🔁 EXISTING PROJECTS -->
+      <label><b>Select Existing Project</b></label>
+      <select id="projectSelect" style="width:320px"></select>
+
+      <button onclick="switchProject()" style="margin-bottom:15px">
+        Load Project
+      </button>
+
+      <hr>
+
+      <!-- ➕ CREATE NEW PROJECT -->
+      <label><b>Create New Project</b></label>
       <input id="plant" placeholder="Plant Name">
       <input id="unit" placeholder="Process Unit">
 
       <button onclick="createProject()">Create Project</button>
 
-      <!-- ✅ NEW PROJECT BUTTON -->
-      <button
-        style="margin-top:8px; background:#dc3545"
-        onclick="resetProject()">
-        + New Project
-      </button>
-
-      <p id="projectStatus"></p>
+      <p id="projectStatus" style="margin-top:10px"></p>
     </section>
 
     <!-- ================= LOOPS ================= -->
@@ -92,7 +97,6 @@
         <i>Select a circuit to assign damage mechanisms</i>
       </div>
 
-      <!-- DAMAGE SUMMARY -->
       <div id="damageSummary" style="margin-top:15px; display:none">
         <h4>Selected Damage Mechanisms</h4>
         <ul id="damageSummaryList"></ul>
