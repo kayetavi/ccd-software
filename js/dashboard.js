@@ -1,6 +1,8 @@
 import { supabase } from './supabase.js';
 
-
+/* ===============================
+   SUPER ADMIN CHECK
+================================ */
 async function isSuperAdmin() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return false;
@@ -20,60 +22,48 @@ async function isSuperAdmin() {
 export let currentProjectId = null;
 window.activeLoopId = null;
 window.activeCircuitId = null;
+
 let currentUserRole = "viewer";
+let isGlobalAdmin = false;
 
 /* ===============================
-   CREATE PROJECT (CREATOR = ADMIN)
+   CREATE PROJECT
 ================================ */
 window.createProject = async () => {
+
   const plant = document.getElementById("plant").value.trim();
   const unit = document.getElementById("unit").value.trim();
 
   if (!plant || !unit) {
-    alert("Plant and Unit are required");
+    alert("Plant and Unit required");
     return;
   }
 
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    alert("User not logged in");
-    return;
-  }
+  if (!user) return alert("Not logged in");
 
-  // ✅ 1️⃣ Create project (IMPORTANT: user_id)
   const { data: project, error } = await supabase
     .from("ccd_projects")
     .insert({
       plant_name: plant,
       unit_name: unit,
-      user_id: user.id   // 🔥 THIS LINE FIXES EVERYTHING
+      user_id: user.id
     })
     .select()
     .single();
 
-  if (error) {
-    alert(error.message);
-    return;
-  }
+  if (error) return alert(error.message);
 
-  // ✅ 2️⃣ Assign creator as ADMIN
-  const { error: roleError } = await supabase
-    .from("project_users")
-    .insert({
-      project_id: project.id,
-      user_id: user.id,
-      role: "admin"
-    });
+  // assign admin
+  await supabase.from("project_users").insert({
+    project_id: project.id,
+    user_id: user.id,
+    role: "admin"
+  });
 
-  if (roleError) {
-    alert(roleError.message);
-    return;
-  }
-
+  await loadProjectList();
   activateProject(project);
-  loadProjectList();
 };
-
 
 /* ===============================
    ACTIVATE PROJECT
@@ -81,11 +71,11 @@ window.createProject = async () => {
 async function activateProject(project) {
   currentProjectId = project.id;
 
-  document.getElementById("plant").value = project.plant_name;
-  document.getElementById("unit").value = project.unit_name;
+  plant.value = project.plant_name;
+  unit.value = project.unit_name;
 
-  document.getElementById("projectStatus").innerText =
-    `Project Active: ${project.plant_name} – ${project.unit_name}`;
+  projectStatus.innerText =
+    `Active Project: ${project.plant_name} – ${project.unit_name}`;
 
   await loadUserRole();
   applyRoleUI();
@@ -96,9 +86,16 @@ async function activateProject(project) {
 }
 
 /* ===============================
-   LOAD USER ROLE (IMPORTANT)
+   LOAD USER ROLE
 ================================ */
 async function loadUserRole() {
+
+  isGlobalAdmin = await isSuperAdmin();
+  if (isGlobalAdmin) {
+    currentUserRole = "admin";
+    return;
+  }
+
   const { data: { user } } = await supabase.auth.getUser();
   if (!user || !currentProjectId) return;
 
@@ -113,90 +110,78 @@ async function loadUserRole() {
 }
 
 /* ===============================
-   APPLY ROLE UI RULES
+   APPLY ROLE UI
 ================================ */
 function applyRoleUI() {
-  const updateBtn = document.getElementById("updateProjectBtn");
 
-  if (currentUserRole === "viewer") {
-    lockProjectInputs();
-    if (updateBtn) {
-      updateBtn.disabled = true;
-      updateBtn.title = "Viewer cannot update project";
-    }
-  } else {
+  if (isGlobalAdmin || currentUserRole !== "viewer") {
     unlockProjectInputs();
-    if (updateBtn) updateBtn.disabled = false;
+  } else {
+    lockProjectInputs();
   }
 }
 
 /* ===============================
-   UPDATE PROJECT (ADMIN / EDITOR)
+   UPDATE PROJECT
 ================================ */
 window.updateProject = async () => {
-  if (currentUserRole === "viewer") {
-    alert("❌ Viewer cannot update project");
+
+  if (!isGlobalAdmin && currentUserRole === "viewer") {
+    alert("Viewer cannot update project");
     return;
   }
-
-  const plant = document.getElementById("plant").value.trim();
-  const unit = document.getElementById("unit").value.trim();
 
   const { error } = await supabase
     .from("ccd_projects")
     .update({
-      plant_name: plant,
-      unit_name: unit
+      plant_name: plant.value.trim(),
+      unit_name: unit.value.trim()
     })
     .eq("id", currentProjectId);
 
-  if (error) {
-    alert(error.message);
-    return;
-  }
-
-  document.getElementById("projectStatus").innerText =
-    `Project Active: ${plant} – ${unit}`;
+  if (error) return alert(error.message);
 
   alert("✅ Project updated");
 };
 
 /* ===============================
-   LOAD PROJECT LIST (USER BASED)
+   LOAD PROJECT LIST
 ================================ */
 window.loadProjectList = async () => {
-  const admin = await isSuperAdmin();
 
-  const { data } = admin
-    ? await supabase.from("ccd_projects").select("*")
-    : await supabase
-        .from("project_users")
-        .select(`
-          project_id,
-          ccd_projects ( plant_name, unit_name )
-        `);
+  isGlobalAdmin = await isSuperAdmin();
+  let data = [];
 
-  const select = document.getElementById("projectSelect");
-  select.innerHTML = `<option value="">-- Select Project --</option>`;
+  if (isGlobalAdmin) {
+    const res = await supabase.from("ccd_projects").select("*");
+    data = res.data || [];
+  } else {
+    const res = await supabase
+      .from("project_users")
+      .select(`project_id, ccd_projects ( plant_name, unit_name )`);
+    data = res.data || [];
+  }
+
+  projectSelect.innerHTML =
+    `<option value="">-- Select Project --</option>`;
 
   data.forEach(p => {
-    const project = admin ? p : p.ccd_projects;
-    const id = admin ? p.id : p.project_id;
+    const id = isGlobalAdmin ? p.id : p.project_id;
+    const proj = isGlobalAdmin ? p : p.ccd_projects;
 
-    select.innerHTML += `
+    projectSelect.innerHTML += `
       <option value="${id}">
-        ${project.plant_name} – ${project.unit_name}
-      </option>
-    `;
+        ${proj.plant_name} – ${proj.unit_name}
+      </option>`;
   });
 };
-
 
 /* ===============================
    SWITCH PROJECT
 ================================ */
 window.switchProject = async () => {
-  const projectId = document.getElementById("projectSelect").value;
+
+  const projectId = projectSelect.value;
   if (!projectId) return;
 
   const { data } = await supabase
@@ -212,32 +197,29 @@ window.switchProject = async () => {
    LOAD LOOPS
 ================================ */
 window.loadSystems = async () => {
-  if (!currentProjectId) return;
 
   const { data } = await supabase
     .from("corrosion_systems")
     .select("*")
     .eq("project_id", currentProjectId);
 
-  const container = document.getElementById("systems");
-  container.innerHTML = data.length
-    ? data.map(loop => `
-        <div class="box">
-          <b>${loop.system_name}</b><br>
-          <small>${loop.process_description || ""}</small><br><br>
-          <button onclick="openLoop('${loop.id}')">OPEN</button>
-        </div>`).join("")
-    : "<i>No loops added yet</i>";
+  systems.innerHTML = data?.length
+    ? data.map(l => `
+      <div class="box">
+        <b>${l.system_name}</b><br>
+        <small>${l.process_description || ""}</small><br>
+        <button onclick="openLoop('${l.id}')">OPEN</button>
+      </div>`).join("")
+    : "<i>No loops added</i>";
 };
 
 /* ===============================
    OPEN LOOP
 ================================ */
-window.openLoop = (loopId) => {
-  window.activeLoopId = loopId;
-  window.activeCircuitId = null;
+window.openLoop = (id) => {
+  activeLoopId = id;
   openTab("circuitSection");
-  if (window.loadCircuits) window.loadCircuits(loopId);
+  window.loadCircuits?.(id);
 };
 
 /* ===============================
@@ -247,9 +229,6 @@ window.openTab = (id) => {
   document.querySelectorAll("section.box")
     .forEach(s => s.style.display = "none");
   document.getElementById(id).style.display = "block";
-
-  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-  document.querySelector(`.tab[data-target="${id}"]`)?.classList.add("active");
 };
 
 /* ===============================
