@@ -17,9 +17,12 @@ async function isSuperAdmin() {
 }
 
 /* ===============================
-   GLOBAL STATE
+   GLOBAL STATE (FIXED)
 ================================ */
-export let currentProjectId = null;
+// 🔥 restore project after refresh
+export let currentProjectId =
+  localStorage.getItem("activeProjectId");
+
 window.activeLoopId = null;
 window.activeCircuitId = null;
 
@@ -54,7 +57,6 @@ window.createProject = async () => {
 
   if (error) return alert(error.message);
 
-  // assign admin
   await supabase.from("project_users").insert({
     project_id: project.id,
     user_id: user.id,
@@ -66,10 +68,13 @@ window.createProject = async () => {
 };
 
 /* ===============================
-   ACTIVATE PROJECT
+   ACTIVATE PROJECT (FIXED)
 ================================ */
 async function activateProject(project) {
+
+  // 🔥 MOST IMPORTANT FIX
   currentProjectId = project.id;
+  localStorage.setItem("activeProjectId", project.id);
 
   plant.value = project.plant_name;
   unit.value = project.unit_name;
@@ -113,7 +118,6 @@ async function loadUserRole() {
    APPLY ROLE UI
 ================================ */
 function applyRoleUI() {
-
   if (isGlobalAdmin || currentUserRole !== "viewer") {
     unlockProjectInputs();
   } else {
@@ -140,7 +144,6 @@ window.updateProject = async () => {
     .eq("id", currentProjectId);
 
   if (error) return alert(error.message);
-
   alert("✅ Project updated");
 };
 
@@ -174,6 +177,17 @@ window.loadProjectList = async () => {
         ${proj.plant_name} – ${proj.unit_name}
       </option>`;
   });
+
+  // 🔥 auto-select last project
+  if (currentProjectId) {
+    projectSelect.value = currentProjectId;
+    const found = data.find(p =>
+      (isGlobalAdmin ? p.id : p.project_id) === currentProjectId
+    );
+    if (found) {
+      activateProject(isGlobalAdmin ? found : found.ccd_projects);
+    }
+  }
 };
 
 /* ===============================
@@ -181,13 +195,12 @@ window.loadProjectList = async () => {
 ================================ */
 window.switchProject = async () => {
 
-  const projectId = projectSelect.value;
-  if (!projectId) return;
+  if (!projectSelect.value) return;
 
   const { data } = await supabase
     .from("ccd_projects")
     .select("*")
-    .eq("id", projectId)
+    .eq("id", projectSelect.value)
     .single();
 
   activateProject(data);
@@ -197,6 +210,8 @@ window.switchProject = async () => {
    LOAD LOOPS
 ================================ */
 window.loadSystems = async () => {
+
+  if (!currentProjectId) return;
 
   const { data } = await supabase
     .from("corrosion_systems")
@@ -217,7 +232,7 @@ window.loadSystems = async () => {
    OPEN LOOP
 ================================ */
 window.openLoop = (id) => {
-  activeLoopId = id;
+  window.activeLoopId = id;
   openTab("circuitSection");
   window.loadCircuits?.(id);
 };
