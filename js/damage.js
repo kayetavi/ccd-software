@@ -10,24 +10,17 @@ window.activeCircuitId = null;
 ================================ */
 window.selectCircuitForDamage = async (circuitId) => {
 
-  if (!circuitId) {
-    console.warn("No circuit id received");
-    return;
-  }
+  if (!circuitId) return;
 
-  // ✅ set active circuit globally
   window.activeCircuitId = circuitId;
 
-  // open DAMAGE tab
+  // ✅ OPEN DAMAGE TAB ONLY
   if (window.openTab) {
     window.openTab("damageSection");
   }
 
   const div = document.getElementById("damageList");
-  if (!div) {
-    alert("damageList div missing in HTML");
-    return;
-  }
+  if (!div) return;
 
   div.innerHTML = `
     <b>Damage Mechanisms for Selected Circuit</b><br><br>
@@ -38,13 +31,9 @@ window.selectCircuitForDamage = async (circuitId) => {
   hideReportSection();
 
   await loadDamageMechanisms();
-
-  // wait for DOM render
   await new Promise(requestAnimationFrame);
-
   await markSelectedDamages();
   await refreshDamageSummary();
-  showReportIfReady();
 };
 
 
@@ -66,11 +55,6 @@ async function loadDamageMechanisms() {
     return;
   }
 
-  if (!data || data.length === 0) {
-    div.innerHTML = "<i>No damage mechanisms found</i>";
-    return;
-  }
-
   div.innerHTML = "";
 
   data.forEach(dm => {
@@ -88,18 +72,18 @@ async function loadDamageMechanisms() {
 
 
 /* ===============================
-   LOAD EXISTING DAMAGE FOR CIRCUIT
+   LOAD EXISTING DAMAGE
 ================================ */
 async function markSelectedDamages() {
 
   if (!window.activeCircuitId) return;
 
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from('circuit_damage_map')
     .select('damage_mechanism_id')
     .eq('circuit_id', window.activeCircuitId);
 
-  if (error || !data) return;
+  if (!data) return;
 
   data.forEach(row => {
     const cb = document.getElementById(`dm-${row.damage_mechanism_id}`);
@@ -109,40 +93,25 @@ async function markSelectedDamages() {
 
 
 /* ===============================
-   TOGGLE DAMAGE
+   TOGGLE DAMAGE (NO REDIRECT)
 ================================ */
 window.toggleDamage = async (damageId, checked) => {
 
-  if (!window.activeCircuitId || !damageId) return;
+  if (!window.activeCircuitId) return;
 
   if (checked) {
-    const { error } = await supabase
-      .from('circuit_damage_map')
-      .insert({
-        circuit_id: window.activeCircuitId,
-        damage_mechanism_id: damageId
-      });
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
+    await supabase.from('circuit_damage_map').insert({
+      circuit_id: window.activeCircuitId,
+      damage_mechanism_id: damageId
+    });
   } else {
-    const { error } = await supabase
-      .from('circuit_damage_map')
+    await supabase.from('circuit_damage_map')
       .delete()
       .eq('circuit_id', window.activeCircuitId)
       .eq('damage_mechanism_id', damageId);
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
   }
 
   await refreshDamageSummary();
-  showReportIfReady();
 };
 
 
@@ -151,59 +120,41 @@ window.toggleDamage = async (damageId, checked) => {
 ================================ */
 async function refreshDamageSummary() {
 
-  const summaryBox = document.getElementById("damageSummary");
+  const box = document.getElementById("damageSummary");
   const list = document.getElementById("damageSummaryList");
 
-  if (!summaryBox || !list || !window.activeCircuitId) return;
+  if (!box || !list || !window.activeCircuitId) return;
 
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from('circuit_damage_map')
-    .select(`
-      damage_mechanisms_master ( name )
-    `)
+    .select(`damage_mechanisms_master ( name )`)
     .eq('circuit_id', window.activeCircuitId);
 
-  if (error || !data || data.length === 0) {
+  if (!data || data.length === 0) {
     hideDamageSummary();
-    hideReportSection();
     return;
   }
 
   list.innerHTML = "";
-  data.forEach(row => {
-    list.innerHTML += `<li>${row.damage_mechanisms_master.name}</li>`;
-  });
+  data.forEach(d =>
+    list.innerHTML += `<li>${d.damage_mechanisms_master.name}</li>`
+  );
 
-  summaryBox.style.display = "block";
+  box.style.display = "block";
 }
 
 
 /* ===============================
-   REPORT VISIBILITY LOGIC
+   HELPERS
 ================================ */
-function showReportIfReady() {
-
-  const report = document.getElementById("reportSection");
-  if (!report) return;
-
-  // show report tab only if damage exists
-  report.style.display = "block";
-
-  // optional auto tab open
-  if (window.openTab) {
-    window.openTab("reportSection");
-  }
-}
-
 function hideReportSection() {
-  const report = document.getElementById("reportSection");
-  if (report) report.style.display = "none";
+  const r = document.getElementById("reportSection");
+  if (r) r.style.display = "none";
 }
 
 function hideDamageSummary() {
-  const summaryBox = document.getElementById("damageSummary");
-  const list = document.getElementById("damageSummaryList");
-
-  if (summaryBox) summaryBox.style.display = "none";
-  if (list) list.innerHTML = "";
+  const b = document.getElementById("damageSummary");
+  const l = document.getElementById("damageSummaryList");
+  if (b) b.style.display = "none";
+  if (l) l.innerHTML = "";
 }
