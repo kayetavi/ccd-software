@@ -47,9 +47,11 @@
     <!-- ================= LOOPS ================= -->
     <section id="loopSection" class="box" style="display:none">
       <h3>Corrosion Loops</h3>
+
       <input id="systemName" placeholder="Loop / System Name">
       <textarea id="systemDesc" placeholder="Process description"></textarea>
       <button onclick="addSystem()">Add Loop</button>
+
       <div id="systems"></div>
     </section>
 
@@ -76,12 +78,42 @@
       <label><b>Inspection Techniques</b></label>
       <div id="inspectionList"></div>
 
+      <hr>
+
+      <!-- 🔴 CRITICAL PROCESS CONSTITUENTS -->
+      <h4>d) Critical Process Constituents</h4>
+
+      <table style="width:100%">
+        <tr>
+          <td>H2S</td>
+          <td><input id="h2s" placeholder="ppm"></td>
+        </tr>
+        <tr>
+          <td>CO2</td>
+          <td><input id="co2" placeholder="ppm / NA"></td>
+        </tr>
+        <tr>
+          <td>O2</td>
+          <td><input id="o2" placeholder="%"></td>
+        </tr>
+        <tr>
+          <td>Chloride</td>
+          <td><input id="chlorides" placeholder="ppm"></td>
+        </tr>
+      </table>
+
+      <button onclick="saveConstituents()">Save Constituents</button>
+      <div id="constituentStatus" style="margin-top:5px"></div>
+
+      <hr>
+
       <div id="circuits"></div>
     </section>
 
     <!-- ================= DAMAGE ================= -->
     <section id="damageSection" class="box" style="display:none">
       <h3>Damage Mechanisms</h3>
+
       <div id="damageList"></div>
 
       <div id="damageSummary" style="display:none">
@@ -116,6 +148,7 @@
 <script type="module" src="js/dashboard.js"></script>
 <script type="module" src="js/systems.js"></script>
 <script type="module" src="js/circuits.js"></script>
+<script type="module" src="js/constituents.js"></script>
 <script type="module" src="js/damage.js"></script>
 <script type="module" src="js/report.js"></script>
 
