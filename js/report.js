@@ -1,4 +1,5 @@
 import { supabase } from './supabase.js';
+import { currentProjectId } from './dashboard.js';
 
 /* ===============================
    GENERATE CCD REPORT
@@ -12,12 +13,10 @@ window.generateReport = async () => {
   reportDiv.innerHTML = "<i>Generating CCD report...</i>";
 
   /* ===============================
-     ACTIVE PROJECT
+     ACTIVE PROJECT (IN-MEMORY)
   ================================ */
-  const projectId = localStorage.getItem("active_project");
-
-  if (!projectId) {
-    reportDiv.innerHTML = "❌ No active project found";
+  if (!currentProjectId) {
+    reportDiv.innerHTML = "❌ No active project selected";
     return;
   }
 
@@ -25,9 +24,9 @@ window.generateReport = async () => {
      FETCH PROJECT
   ================================ */
   const { data: project, error: pErr } = await supabase
-    .from('ccd_projects')
-    .select('*')
-    .eq('id', projectId)
+    .from("ccd_projects")
+    .select("*")
+    .eq("id", currentProjectId)
     .single();
 
   if (pErr || !project) {
@@ -36,10 +35,11 @@ window.generateReport = async () => {
   }
 
   /* ===============================
-     FETCH LOOPS → CIRCUITS → DAMAGE
+     FETCH FULL STRUCTURE
+     PROJECT → LOOPS → CIRCUITS → DAMAGE
   ================================ */
   const { data: loops, error: lErr } = await supabase
-    .from('corrosion_systems')
+    .from("corrosion_systems")
     .select(`
       id,
       system_name,
@@ -58,7 +58,8 @@ window.generateReport = async () => {
         )
       )
     `)
-    .eq('project_id', project.id);
+    .eq("project_id", project.id)
+    .order("created_at");
 
   if (lErr || !loops || loops.length === 0) {
     reportDiv.innerHTML = "❌ No corrosion loops found";
@@ -70,8 +71,10 @@ window.generateReport = async () => {
   ================================ */
   let html = `
     <h3>📄 Corrosion Control Document (CCD)</h3>
-    <b>Plant:</b> ${project.plant_name}<br>
-    <b>Unit:</b> ${project.unit_name}<br>
+    <p>
+      <b>Plant:</b> ${project.plant_name}<br>
+      <b>Unit:</b> ${project.unit_name}
+    </p>
     <hr>
   `;
 
@@ -90,7 +93,7 @@ window.generateReport = async () => {
     loop.circuits.forEach((circuit, j) => {
 
       html += `
-        <div style="margin-left:20px">
+        <div style="margin-left:20px;margin-bottom:10px">
           <b>${i + 1}.${j + 1} Circuit:</b> ${circuit.circuit_name}<br>
           Material: ${circuit.material}<br>
           Operating Temp: ${circuit.operating_temp ?? "-"} °C<br>
