@@ -75,3 +75,22 @@ window.openLoop = (loopId) => {
 ================================ */
 const systemName = document.getElementById("systemName");
 const systemDesc = document.getElementById("systemDesc");
+
+
+window.deleteLoop = async (loopId) => {
+
+  if (!confirm("Delete this loop and all circuits inside it?")) return;
+
+  const { error } = await supabase
+    .from("corrosion_systems")
+    .delete()
+    .eq("id", loopId);
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  loadSystems();
+};
+
