@@ -1,14 +1,21 @@
+/* ================= GLOBAL RESET ================= */
 * {
   box-sizing: border-box;
   font-family: "Segoe UI", Arial, sans-serif;
 }
 
+/* ================= BODY ================= */
 body {
   margin: 0;
   background: radial-gradient(circle at top, #0b1220, #020617);
   color: #ffffff;
 }
 
+/* FORCE WHITE TEXT (IMPORTANT FIX) */
+.content,
+.content * {
+  color: #ffffff;
+}
 
 /* ================= APP LAYOUT ================= */
 .app {
@@ -28,6 +35,7 @@ body {
   color: #38bdf8;
   margin-bottom: 30px;
   font-size: 22px;
+  font-weight: 600;
 }
 
 /* Sidebar Buttons */
@@ -35,7 +43,7 @@ body {
   width: 100%;
   background: transparent;
   border: none;
-  color: #cbd5e1;
+  color: #ffffff;
   padding: 12px 14px;
   margin-bottom: 8px;
   text-align: left;
@@ -72,21 +80,35 @@ body {
 }
 
 /* ================= HEADINGS ================= */
-h3 {
+h1, h2, h3, h4 {
   margin-top: 0;
-  margin-bottom: 15px;
   color: #38bdf8;
 }
 
-/* ================= INPUTS ================= */
-input, textarea {
+/* ================= LABELS & TEXT ================= */
+label,
+p,
+span,
+small {
+  color: #ffffff;
+}
+
+/* ================= INPUTS / SELECT ================= */
+input,
+textarea,
+select {
   width: 320px;
   padding: 10px;
   margin-bottom: 10px;
   background: #020617;
   border: 1px solid #1f2937;
   border-radius: 10px;
-  color: #e5e7eb;
+  color: #ffffff;
+}
+
+select option {
+  background: #020617;
+  color: #ffffff;
 }
 
 textarea {
@@ -114,6 +136,13 @@ button:hover {
   margin-top: 10px;
   background: #020617;
   border: 1px solid #1f2937;
+}
+
+/* ================= HR LINE ================= */
+hr {
+  border: none;
+  border-top: 1px solid #1f2937;
+  margin: 20px 0;
 }
 
 /* ================= SCROLLBAR ================= */
