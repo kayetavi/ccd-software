@@ -2,12 +2,12 @@ import { supabase } from './supabase.js';
 import { currentProjectId } from './dashboard.js';
 
 /* ===============================
-   GENERATE CCD REPORT (NERAL STYLE)
+   GENERATE CCD REPORT (NRL STYLE)
 ================================ */
 window.generateReport = async () => {
 
   const reportSection = document.getElementById("reportSection");
-  const reportDiv = document.getElementById("reportContent");
+  const reportDiv = document.getElementById("ccdReport"); // ✅ FIXED
 
   reportSection.style.display = "block";
   reportDiv.innerHTML = "<i>Generating CCD report...</i>";
@@ -61,7 +61,7 @@ window.generateReport = async () => {
   }
 
   /* ===============================
-     BUILD REPORT
+     BUILD REPORT HTML
   ================================ */
   let html = `
     <div style="font-family:Arial;font-size:12px;color:#000">
@@ -83,9 +83,7 @@ window.generateReport = async () => {
     const sectionNo = `7.${31 + loopIndex}`;
 
     html += `
-      <h4>
-        ${sectionNo} Corrosion Loop: ${loop.system_name}
-      </h4>
+      <h4>${sectionNo} Corrosion Loop: ${loop.system_name}</h4>
 
       <b>a) Corrosion Loop Description</b>
       <p>${loop.process_description || "NA"}</p>
