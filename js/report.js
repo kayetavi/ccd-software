@@ -113,8 +113,8 @@ window.generateReport = async () => {
         <ul>
           <li>Operating Temperature: ${circuit.operating_temp ?? "NA"}</li>
           <li>Operating Pressure: ${circuit.operating_pressure ?? "NA"}</li>
-          <li>Process Fluid: ${circuit.process_fluids?.name ?? "NA"}</li>
-          <li>Stream Phase: ${circuit.stream_phases?.name ?? "NA"}</li>
+          <li>Process Fluid: ${circuit.process_fluid_master?.name ?? "NA"}</li>
+          <li>Stream Phase: ${circuit.stream_phase_master?.name ?? "NA"}</li>
         </ul>
 
         <b>d) Material of Construction</b>
