@@ -2,7 +2,7 @@ import { supabase } from './supabase.js';
 import { currentProjectId } from './dashboard.js';
 
 /* ===============================
-   GENERATE CCD REPORT
+   GENERATE CCD REPORT (NERAL STYLE)
 ================================ */
 window.generateReport = async () => {
 
@@ -12,9 +12,6 @@ window.generateReport = async () => {
   reportSection.style.display = "block";
   reportDiv.innerHTML = "<i>Generating CCD report...</i>";
 
-  /* ===============================
-     ACTIVE PROJECT (IN-MEMORY)
-  ================================ */
   if (!currentProjectId) {
     reportDiv.innerHTML = "❌ No active project selected";
     return;
@@ -36,16 +33,13 @@ window.generateReport = async () => {
 
   /* ===============================
      FETCH FULL STRUCTURE
-     PROJECT → LOOPS → CIRCUITS → DAMAGE
   ================================ */
   const { data: loops, error: lErr } = await supabase
     .from("corrosion_systems")
     .select(`
-      id,
       system_name,
       process_description,
       circuits (
-        id,
         circuit_name,
         material,
         operating_temp,
@@ -67,49 +61,68 @@ window.generateReport = async () => {
   }
 
   /* ===============================
-     BUILD REPORT HTML
+     BUILD NERAL STYLE REPORT
   ================================ */
   let html = `
-    <h3>📄 Corrosion Control Document (CCD)</h3>
-    <p>
-      <b>Plant:</b> ${project.plant_name}<br>
-      <b>Unit:</b> ${project.unit_name}
-    </p>
-    <hr>
+    <div style="font-family:Arial;font-size:12px;color:#000">
+
+      <h3 style="text-align:center">
+        CORROSION CONTROL DOCUMENT (CCD)
+      </h3>
+
+      <p>
+        <b>Plant:</b> ${project.plant_name}<br>
+        <b>Unit:</b> ${project.unit_name}
+      </p>
+
+      <hr>
   `;
 
   loops.forEach((loop, i) => {
 
     html += `
-      <h4>${i + 1}. Corrosion Loop: ${loop.system_name}</h4>
-      <p>${loop.process_description || ""}</p>
+      <h4>
+        ${7}.${i + 31}
+        Corrosion Loop: ${loop.system_name}
+      </h4>
+
+      <b>a) Corrosion Loop Description</b>
+      <p>${loop.process_description || "—"}</p>
+
+      <b>b) Corrosion Loop Process Description</b>
+      <p>${loop.process_description || "—"}</p>
+
+      <b>c) Operating Parameters</b>
     `;
 
     if (!loop.circuits || loop.circuits.length === 0) {
-      html += `<i>No circuits defined</i><hr>`;
+      html += `<p><i>No circuits defined</i></p><hr>`;
       return;
     }
 
-    loop.circuits.forEach((circuit, j) => {
+    loop.circuits.forEach(circuit => {
+
+      const dms = circuit.circuit_damage_map || [];
 
       html += `
-        <div style="margin-left:20px;margin-bottom:10px">
-          <b>${i + 1}.${j + 1} Circuit:</b> ${circuit.circuit_name}<br>
-          Material: ${circuit.material}<br>
-          Operating Temp: ${circuit.operating_temp ?? "-"} °C<br>
-          Operating Pressure: ${circuit.operating_pressure ?? "-"} bar<br>
+        <ul>
+          <li>Operating Temperature: ${circuit.operating_temp ?? "Ambient"}</li>
+          <li>Operating Pressure: ${circuit.operating_pressure ?? "NA"}</li>
+          <li>Process Fluid: Fuel Gas</li>
+          <li>Stream Phase: Gas</li>
+        </ul>
 
-          <u>Damage Mechanisms:</u>
-          <ul>
+        <b>d) Material of Construction</b>
+        <p>${circuit.material || "NA"}</p>
+
+        <b>e) Primary Damage Mechanisms</b>
+        <ul>
       `;
 
-      if (
-        !circuit.circuit_damage_map ||
-        circuit.circuit_damage_map.length === 0
-      ) {
-        html += `<li>None selected</li>`;
+      if (dms.length === 0) {
+        html += `<li>No Damage Mechanism Identified</li>`;
       } else {
-        circuit.circuit_damage_map.forEach(dm => {
+        dms.forEach(dm => {
           html += `
             <li>
               ${dm.damage_mechanisms_master.name}
@@ -120,13 +133,34 @@ window.generateReport = async () => {
       }
 
       html += `
-          </ul>
-        </div>
+        </ul>
+
+        <b>f) Suggested Inspection Techniques</b>
+        <ul>
+          <li>UTG for piping ≥ 2 inch diameter</li>
+          <li>Profile RT for piping ≤ 2 inch diameter</li>
+          <li>Visual inspection (External)</li>
+        </ul>
       `;
     });
 
     html += `<hr>`;
   });
+
+  html += `
+      <table style="width:100%;font-size:11px;margin-top:20px">
+        <tr>
+          <td><b>Company</b></td><td>NRL</td>
+          <td><b>Prepared By</b></td><td>CCD Pro System</td>
+        </tr>
+        <tr>
+          <td><b>Plant</b></td><td>${project.plant_name}</td>
+          <td><b>Approved By</b></td><td>—</td>
+        </tr>
+      </table>
+
+    </div>
+  `;
 
   reportDiv.innerHTML = html;
 };
