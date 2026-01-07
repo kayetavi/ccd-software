@@ -113,9 +113,66 @@
 
     <!-- ================= REPORT ================= -->
     <section id="reportSection" class="box" style="display:none">
-      <h3>CCD Report</h3>
-      <div id="reportContent"></div>
-    </section>
+
+  <div id="ccdReport" style="font-family:Arial; font-size:12px">
+
+    <h3 style="border-bottom:1px solid #000">
+      7.<span id="r_loop_no">31</span>
+      Corrosion Loop:
+      <span id="r_loop_code"></span> –
+      <span id="r_service"></span>
+    </h3>
+
+    <b>a) Corrosion Loop Description</b>
+    <p id="r_loop_desc"></p>
+
+    <b>b) Corrosion Loop Process Description</b>
+    <p id="r_process_desc"></p>
+
+    <b>c) Operating Parameters</b>
+    <ul>
+      <li>Operating Temperature: <span id="r_temp"></span></li>
+      <li>Operating Pressure: <span id="r_pressure"></span></li>
+      <li>Process Fluid: <span id="r_fluid"></span></li>
+      <li>Stream Phase: <span id="r_phase"></span></li>
+    </ul>
+
+    <b>d) Critical Process Constituents</b>
+    <table style="width:100%;border-collapse:collapse">
+      <tr><td>H2S</td><td class="red">NA</td></tr>
+      <tr><td>CO2</td><td class="red">NA</td></tr>
+      <tr><td>O2</td><td class="red">NA</td></tr>
+      <tr><td>Chloride</td><td class="red">NA</td></tr>
+    </table>
+
+    <b>e) Material of Construction</b>
+    <p id="r_material"></p>
+
+    <b>f) Primary Damage Mechanisms</b>
+    <ul>
+      <li>Internal: <span id="r_internal_dm"></span></li>
+      <li>External: <span id="r_external_dm"></span></li>
+    </ul>
+
+    <b>j) Suggested Inspection Techniques</b>
+    <ul id="r_inspection"></ul>
+
+    <hr>
+
+    <table style="width:100%;font-size:11px">
+      <tr>
+        <td><b>Company</b></td><td>NRL</td>
+        <td><b>Prepared By</b></td><td>System</td>
+      </tr>
+      <tr>
+        <td><b>Plant</b></td><td id="r_plant"></td>
+        <td><b>Approved By</b></td><td>—</td>
+      </tr>
+    </table>
+
+  </div>
+
+</section>
 
   </main>
 </div>
