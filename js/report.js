@@ -32,7 +32,7 @@ window.generateReport = async () => {
   }
 
   /* ===============================
-     FETCH FULL STRUCTURE
+     FETCH LOOPS → CIRCUITS → DAMAGE → INSPECTION
   ================================ */
   const { data: loops, error: lErr } = await supabase
     .from("corrosion_systems")
@@ -45,14 +45,17 @@ window.generateReport = async () => {
         material,
         operating_temp,
         operating_pressure,
-        process_fluids ( name ),
-        stream_phases ( name ),
+
+        process_fluid_master ( name ),
+        stream_phase_master ( name ),
+
         circuit_damage_map (
           damage_mechanisms_master (
             name,
             api_reference
           )
         ),
+
         circuit_inspections (
           inspection_techniques ( name )
         )
@@ -125,7 +128,7 @@ window.generateReport = async () => {
       `;
 
       if (dms.length === 0) {
-        html += `<li>No Damage Mechanism Identified</li>`;
+        html += `<li>NA</li>`;
       } else {
         dms.forEach(dm => {
           if (!dm.damage_mechanisms_master) return;
@@ -154,9 +157,7 @@ window.generateReport = async () => {
         });
       }
 
-      html += `
-        </ul>
-      `;
+      html += `</ul>`;
     });
 
     html += `<hr>`;
