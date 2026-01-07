@@ -17,10 +17,10 @@
         onclick="openTab('projectSection', this)">📁 Project</button>
 
       <button class="tab" data-target="loopSection"
-        onclick="openTab('loopSection', this)">🔁 Corrosion Loop</button>
+        onclick="openTab('loopSection', this)">🔁 Corrosion Loops</button>
 
       <button class="tab" data-target="circuitSection"
-        onclick="openTab('circuitSection', this)">🧩 Circuit</button>
+        onclick="openTab('circuitSection', this)">🧩 Circuits</button>
 
       <button class="tab" data-target="damageSection"
         onclick="openTab('damageSection', this)">⚠️ Damage</button>
@@ -33,43 +33,80 @@
   <!-- ========== MAIN CONTENT ========== -->
   <main class="content">
 
-    <!-- PROJECT -->
+    <!-- ================= PROJECT ================= -->
     <section id="projectSection" class="box">
       <h3>Project</h3>
+
       <input id="plant" placeholder="Plant Name">
       <input id="unit" placeholder="Process Unit">
+
       <button onclick="createProject()">Create Project</button>
+
+      <!-- ✅ NEW PROJECT BUTTON -->
+      <button
+        style="margin-top:8px; background:#dc3545"
+        onclick="resetProject()">
+        + New Project
+      </button>
+
       <p id="projectStatus"></p>
     </section>
 
-    <!-- LOOPS -->
+    <!-- ================= LOOPS ================= -->
     <section id="loopSection" class="box" style="display:none">
       <h3>Corrosion Loops</h3>
+
       <input id="systemName" placeholder="Loop / System Name">
       <textarea id="systemDesc" placeholder="Process description"></textarea>
+
       <button onclick="addSystem()">Add Loop</button>
-      <div id="systems"></div>
+
+      <div id="systems">
+        <i>No loops added yet</i>
+      </div>
     </section>
 
-    <!-- CIRCUITS -->
+    <!-- ================= CIRCUITS ================= -->
     <section id="circuitSection" class="box" style="display:none">
       <h3>Circuits</h3>
-      <input id="circuitName" placeholder="Circuit Name">
-      <input id="material" placeholder="Material">
+
+      <input id="circuitName" placeholder="Circuit Name (e.g. 04-P-LC-01)">
+      <input id="material" placeholder="Material (e.g. CS)">
       <input id="temp" placeholder="Temp (°C)">
       <input id="pressure" placeholder="Pressure (bar)">
+
       <button onclick="addCircuit()">Add Circuit</button>
-      <div id="circuits"></div>
+
+      <div id="circuits">
+        <i>No circuits added yet</i>
+      </div>
     </section>
 
-    <!-- DAMAGE -->
+    <!-- ================= DAMAGE ================= -->
     <section id="damageSection" class="box" style="display:none">
       <h3>Damage Mechanisms</h3>
-      <div id="damageList"></div>
-      <button onclick="generateReport()">Generate Report</button>
+
+      <p>Select applicable damage mechanisms (API 571)</p>
+
+      <div id="damageList">
+        <i>Select a circuit to assign damage mechanisms</i>
+      </div>
+
+      <!-- DAMAGE SUMMARY -->
+      <div id="damageSummary" style="margin-top:15px; display:none">
+        <h4>Selected Damage Mechanisms</h4>
+        <ul id="damageSummaryList"></ul>
+      </div>
+
+      <button
+        id="generateReportBtn"
+        style="margin-top:15px"
+        onclick="generateReport()">
+        Generate CCD Report
+      </button>
     </section>
 
-    <!-- REPORT -->
+    <!-- ================= REPORT ================= -->
     <section id="reportSection" class="box" style="display:none">
       <h3>CCD Report</h3>
       <div id="reportContent"></div>
@@ -78,8 +115,8 @@
   </main>
 </div>
 
-<!-- SCRIPTS -->
-<script type="module" src="js/project.js"></script>
+<!-- ================= SCRIPTS ================= -->
+<script type="module" src="js/dashboard.js"></script>
 <script type="module" src="js/systems.js"></script>
 <script type="module" src="js/circuits.js"></script>
 <script type="module" src="js/damage.js"></script>
