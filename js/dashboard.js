@@ -1,5 +1,19 @@
 import { supabase } from './supabase.js';
 
+
+async function isSuperAdmin() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+
+  const { data } = await supabase
+    .from("profiles")
+    .select("global_role")
+    .eq("id", user.id)
+    .single();
+
+  return data?.global_role === "super_admin";
+}
+
 /* ===============================
    GLOBAL STATE
 ================================ */
