@@ -2,7 +2,7 @@ import { supabase } from './supabase.js';
 import { currentProjectId } from './dashboard.js';
 
 /* ===============================
-   GENERATE CCD REPORT (NRL STYLE)
+   GENERATE CCD REPORT (FIXED)
 ================================ */
 window.generateReport = async () => {
 
@@ -12,7 +12,11 @@ window.generateReport = async () => {
   reportSection.style.display = "block";
   reportDiv.innerHTML = "<i>Generating CCD report...</i>";
 
-  if (!currentProjectId) {
+  // 🔥 SAFE PROJECT ID
+  const projectId =
+    currentProjectId || localStorage.getItem("activeProjectId");
+
+  if (!projectId) {
     reportDiv.innerHTML = "❌ No active project selected";
     return;
   }
@@ -23,7 +27,7 @@ window.generateReport = async () => {
   const { data: project, error: pErr } = await supabase
     .from("ccd_projects")
     .select("plant_name, unit_name")
-    .eq("id", currentProjectId)
+    .eq("id", projectId)
     .single();
 
   if (pErr || !project) {
@@ -32,11 +36,12 @@ window.generateReport = async () => {
   }
 
   /* ===============================
-     FETCH FULL CCD STRUCTURE
+     FETCH FULL CCD STRUCTURE (FIXED JOINS)
   ================================ */
   const { data: loops, error: lErr } = await supabase
     .from("corrosion_systems")
     .select(`
+      id,
       system_name,
       process_description,
       circuits (
@@ -64,11 +69,16 @@ window.generateReport = async () => {
         )
       )
     `)
-    .eq("project_id", currentProjectId)
-    .order("created_at");
+    .eq("project_id", projectId)
+    .order("created_at", { ascending: true });
 
-  if (lErr || !loops || loops.length === 0) {
-    reportDiv.innerHTML = "❌ No corrosion loops found";
+  if (lErr) {
+    reportDiv.innerHTML = `❌ ${lErr.message}`;
+    return;
+  }
+
+  if (!loops || loops.length === 0) {
+    reportDiv.innerHTML = "❌ No corrosion loops found for this project";
     return;
   }
 
@@ -157,7 +167,9 @@ window.generateReport = async () => {
         inspections.forEach(i => {
           const tech = i.inspection_techniques_master;
           if (!tech) return;
-          html += `<li>${tech.technique} (${tech.category})</li>`;
+          html += `
+            <li>${tech.technique} (${tech.category})</li>
+          `;
         });
       }
 
