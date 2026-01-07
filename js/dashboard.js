@@ -26,12 +26,13 @@ window.createProject = async () => {
     return;
   }
 
-  // 1️⃣ Create project
+  // ✅ 1️⃣ Create project (IMPORTANT: user_id)
   const { data: project, error } = await supabase
     .from("ccd_projects")
     .insert({
       plant_name: plant,
-      unit_name: unit
+      unit_name: unit,
+      user_id: user.id   // 🔥 THIS LINE FIXES EVERYTHING
     })
     .select()
     .single();
@@ -41,16 +42,24 @@ window.createProject = async () => {
     return;
   }
 
-  // 2️⃣ Assign creator as ADMIN
-  await supabase.from("project_users").insert({
-    project_id: project.id,
-    user_id: user.id,
-    role: "admin"
-  });
+  // ✅ 2️⃣ Assign creator as ADMIN
+  const { error: roleError } = await supabase
+    .from("project_users")
+    .insert({
+      project_id: project.id,
+      user_id: user.id,
+      role: "admin"
+    });
+
+  if (roleError) {
+    alert(roleError.message);
+    return;
+  }
 
   activateProject(project);
   loadProjectList();
 };
+
 
 /* ===============================
    ACTIVATE PROJECT
