@@ -7,7 +7,7 @@ import { currentProjectId } from './dashboard.js';
 window.generateReport = async () => {
 
   const reportSection = document.getElementById("reportSection");
-  const reportDiv = document.getElementById("ccdReport"); // ✅ FIXED
+  const reportDiv = document.getElementById("ccdReport");
 
   reportSection.style.display = "block";
   reportDiv.innerHTML = "<i>Generating CCD report...</i>";
@@ -32,7 +32,7 @@ window.generateReport = async () => {
   }
 
   /* ===============================
-     FETCH LOOPS → CIRCUITS → DAMAGE
+     FETCH FULL STRUCTURE
   ================================ */
   const { data: loops, error: lErr } = await supabase
     .from("corrosion_systems")
@@ -40,15 +40,21 @@ window.generateReport = async () => {
       system_name,
       process_description,
       circuits (
+        id,
         circuit_name,
         material,
         operating_temp,
         operating_pressure,
+        process_fluids ( name ),
+        stream_phases ( name ),
         circuit_damage_map (
           damage_mechanisms_master (
             name,
             api_reference
           )
+        ),
+        circuit_inspections (
+          inspection_techniques ( name )
         )
       )
     `)
@@ -61,7 +67,7 @@ window.generateReport = async () => {
   }
 
   /* ===============================
-     BUILD REPORT HTML
+     BUILD REPORT
   ================================ */
   let html = `
     <div style="font-family:Arial;font-size:12px;color:#000">
@@ -100,14 +106,15 @@ window.generateReport = async () => {
     loop.circuits.forEach(circuit => {
 
       const dms = circuit.circuit_damage_map || [];
+      const inspections = circuit.circuit_inspections || [];
 
       html += `
         <b>c) Operating Parameters</b>
         <ul>
-          <li>Operating Temperature: ${circuit.operating_temp ?? "Ambient"}</li>
+          <li>Operating Temperature: ${circuit.operating_temp ?? "NA"}</li>
           <li>Operating Pressure: ${circuit.operating_pressure ?? "NA"}</li>
-          <li>Process Fluid: Fuel Gas</li>
-          <li>Stream Phase: Gas</li>
+          <li>Process Fluid: ${circuit.process_fluids?.name ?? "NA"}</li>
+          <li>Stream Phase: ${circuit.stream_phases?.name ?? "NA"}</li>
         </ul>
 
         <b>d) Material of Construction</b>
@@ -136,9 +143,18 @@ window.generateReport = async () => {
 
         <b>f) Suggested Inspection Techniques</b>
         <ul>
-          <li>UTG for piping ≥ 2 inch diameter</li>
-          <li>Profile RT for piping ≤ 2 inch diameter</li>
-          <li>Visual inspection (External)</li>
+      `;
+
+      if (inspections.length === 0) {
+        html += `<li>NA</li>`;
+      } else {
+        inspections.forEach(i => {
+          if (!i.inspection_techniques) return;
+          html += `<li>${i.inspection_techniques.name}</li>`;
+        });
+      }
+
+      html += `
         </ul>
       `;
     });
