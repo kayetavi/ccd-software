@@ -38,23 +38,23 @@
       <h3>Project</h3>
 
       <!-- 🔁 EXISTING PROJECTS -->
-      <label><b>Select Existing Project</b></label>
-      <select id="projectSelect" style="width:320px"></select>
+      <label><b>Select Existing Project</b></label><br>
+      <select id="projectSelect" style="width:320px; margin-bottom:8px"></select><br>
 
-      <button onclick="switchProject()" style="margin-bottom:15px">
-        Load Project
-      </button>
+      <button onclick="switchProject()">Load Project</button>
 
-      <hr>
+      <hr style="margin:15px 0">
 
-      <!-- ➕ CREATE NEW PROJECT -->
-      <label><b>Create New Project</b></label>
+      <!-- ➕ CREATE / EDIT PROJECT -->
+      <label><b>Create / Edit Project</b></label>
+
       <input id="plant" placeholder="Plant Name">
       <input id="unit" placeholder="Process Unit">
 
-      <button onclick="createProject()">Create Project</button>
+      <button onclick="createProject()">➕ Create Project</button>
+      <button onclick="updateProject()">✏️ Update Project</button>
 
-      <p id="projectStatus" style="margin-top:10px"></p>
+      <p id="projectStatus" style="margin-top:10px;font-weight:bold"></p>
     </section>
 
     <!-- ================= LOOPS ================= -->
@@ -66,7 +66,7 @@
 
       <button onclick="addSystem()">Add Loop</button>
 
-      <div id="systems">
+      <div id="systems" style="margin-top:10px">
         <i>No loops added yet</i>
       </div>
     </section>
@@ -82,7 +82,7 @@
 
       <button onclick="addCircuit()">Add Circuit</button>
 
-      <div id="circuits">
+      <div id="circuits" style="margin-top:10px">
         <i>No circuits added yet</i>
       </div>
     </section>
@@ -97,6 +97,7 @@
         <i>Select a circuit to assign damage mechanisms</i>
       </div>
 
+      <!-- DAMAGE SUMMARY -->
       <div id="damageSummary" style="margin-top:15px; display:none">
         <h4>Selected Damage Mechanisms</h4>
         <ul id="damageSummaryList"></ul>
