@@ -6,8 +6,9 @@
 body {
   margin: 0;
   background: radial-gradient(circle at top, #0b1220, #020617);
-  color: #e5e7eb;
+  color: #ffffff;
 }
+
 
 /* ================= APP LAYOUT ================= */
 .app {
