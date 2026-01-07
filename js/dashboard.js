@@ -9,11 +9,11 @@ window.activeCircuitId = null;
 let currentUserRole = "viewer";
 
 /* ===============================
-   CREATE PROJECT
+   CREATE PROJECT (CREATOR = ADMIN)
 ================================ */
 window.createProject = async () => {
-  const plant = plantInput().value.trim();
-  const unit = unitInput().value.trim();
+  const plant = document.getElementById("plant").value.trim();
+  const unit = document.getElementById("unit").value.trim();
 
   if (!plant || !unit) {
     alert("Plant and Unit are required");
@@ -31,8 +31,7 @@ window.createProject = async () => {
     .from("ccd_projects")
     .insert({
       plant_name: plant,
-      unit_name: unit,
-      user_id: user.id
+      unit_name: unit
     })
     .select()
     .single();
@@ -46,7 +45,6 @@ window.createProject = async () => {
   await supabase.from("project_users").insert({
     project_id: project.id,
     user_id: user.id,
-    email: user.email,
     role: "admin"
   });
 
@@ -60,10 +58,10 @@ window.createProject = async () => {
 async function activateProject(project) {
   currentProjectId = project.id;
 
-  plantInput().value = project.plant_name;
-  unitInput().value = project.unit_name;
+  document.getElementById("plant").value = project.plant_name;
+  document.getElementById("unit").value = project.unit_name;
 
-  projectStatus().innerText =
+  document.getElementById("projectStatus").innerText =
     `Project Active: ${project.plant_name} – ${project.unit_name}`;
 
   await loadUserRole();
@@ -75,33 +73,37 @@ async function activateProject(project) {
 }
 
 /* ===============================
-   LOAD USER ROLE (CORE LOGIC)
+   LOAD USER ROLE (IMPORTANT)
 ================================ */
 async function loadUserRole() {
   const { data: { user } } = await supabase.auth.getUser();
+  if (!user || !currentProjectId) return;
 
   const { data } = await supabase
     .from("project_users")
     .select("role")
     .eq("project_id", currentProjectId)
-    .eq("email", user.email)
+    .eq("user_id", user.id)
     .single();
 
   currentUserRole = data?.role || "viewer";
 }
 
 /* ===============================
-   APPLY ROLE RULES (UI)
+   APPLY ROLE UI RULES
 ================================ */
 function applyRoleUI() {
   const updateBtn = document.getElementById("updateProjectBtn");
 
   if (currentUserRole === "viewer") {
-    updateBtn.disabled = true;
     lockProjectInputs();
+    if (updateBtn) {
+      updateBtn.disabled = true;
+      updateBtn.title = "Viewer cannot update project";
+    }
   } else {
-    updateBtn.disabled = false;
     unlockProjectInputs();
+    if (updateBtn) updateBtn.disabled = false;
   }
 }
 
@@ -114,8 +116,8 @@ window.updateProject = async () => {
     return;
   }
 
-  const plant = plantInput().value.trim();
-  const unit = unitInput().value.trim();
+  const plant = document.getElementById("plant").value.trim();
+  const unit = document.getElementById("unit").value.trim();
 
   const { error } = await supabase
     .from("ccd_projects")
@@ -130,17 +132,18 @@ window.updateProject = async () => {
     return;
   }
 
-  projectStatus().innerText =
+  document.getElementById("projectStatus").innerText =
     `Project Active: ${plant} – ${unit}`;
 
   alert("✅ Project updated");
 };
 
 /* ===============================
-   LOAD PROJECT LIST (ROLE BASED)
+   LOAD PROJECT LIST (USER BASED)
 ================================ */
 window.loadProjectList = async () => {
   const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
 
   const { data } = await supabase
     .from("project_users")
@@ -148,7 +151,7 @@ window.loadProjectList = async () => {
       project_id,
       ccd_projects ( plant_name, unit_name )
     `)
-    .eq("email", user.email);
+    .eq("user_id", user.id);
 
   const select = document.getElementById("projectSelect");
   select.innerHTML = `<option value="">-- Select Project --</option>`;
@@ -165,43 +168,77 @@ window.loadProjectList = async () => {
    SWITCH PROJECT
 ================================ */
 window.switchProject = async () => {
-  const id = document.getElementById("projectSelect").value;
-  if (!id) return;
+  const projectId = document.getElementById("projectSelect").value;
+  if (!projectId) return;
 
   const { data } = await supabase
     .from("ccd_projects")
     .select("*")
-    .eq("id", id)
+    .eq("id", projectId)
     .single();
 
   activateProject(data);
 };
 
 /* ===============================
+   LOAD LOOPS
+================================ */
+window.loadSystems = async () => {
+  if (!currentProjectId) return;
+
+  const { data } = await supabase
+    .from("corrosion_systems")
+    .select("*")
+    .eq("project_id", currentProjectId);
+
+  const container = document.getElementById("systems");
+  container.innerHTML = data.length
+    ? data.map(loop => `
+        <div class="box">
+          <b>${loop.system_name}</b><br>
+          <small>${loop.process_description || ""}</small><br><br>
+          <button onclick="openLoop('${loop.id}')">OPEN</button>
+        </div>`).join("")
+    : "<i>No loops added yet</i>";
+};
+
+/* ===============================
+   OPEN LOOP
+================================ */
+window.openLoop = (loopId) => {
+  window.activeLoopId = loopId;
+  window.activeCircuitId = null;
+  openTab("circuitSection");
+  if (window.loadCircuits) window.loadCircuits(loopId);
+};
+
+/* ===============================
+   TAB CONTROL
+================================ */
+window.openTab = (id) => {
+  document.querySelectorAll("section.box")
+    .forEach(s => s.style.display = "none");
+  document.getElementById(id).style.display = "block";
+
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelector(`.tab[data-target="${id}"]`)?.classList.add("active");
+};
+
+/* ===============================
    HELPERS
 ================================ */
-function plantInput() {
-  return document.getElementById("plant");
-}
-function unitInput() {
-  return document.getElementById("unit");
-}
-function projectStatus() {
-  return document.getElementById("projectStatus");
-}
-
 function lockProjectInputs() {
-  plantInput().disabled = true;
-  unitInput().disabled = true;
+  plant.disabled = true;
+  unit.disabled = true;
 }
 
 function unlockProjectInputs() {
-  plantInput().disabled = false;
-  unitInput().disabled = false;
+  plant.disabled = false;
+  unit.disabled = false;
 }
 
 function resetLowerFlow() {
-  ["loopSection", "circuitSection", "damageSection", "reportSection"]
+  ["loopSection","circuitSection","damageSection","reportSection"]
     .forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = "none";
