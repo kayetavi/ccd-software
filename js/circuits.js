@@ -17,41 +17,59 @@ const inspectionList = document.getElementById("inspectionList");
    LOAD MASTER DATA
 ================================ */
 async function loadProcessFluids() {
-  const { data } = await supabase
-    .from("process_fluids")
-    .select("*");
+  const { data, error } = await supabase
+    .from("process_fluid_master")
+    .select("id, name")
+    .order("name");
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
 
   processFluidSelect.innerHTML =
     `<option value="">-- Select Process Fluid --</option>`;
 
-  data?.forEach(f => {
+  data.forEach(f => {
     processFluidSelect.innerHTML +=
       `<option value="${f.id}">${f.name}</option>`;
   });
 }
 
 async function loadStreamPhases() {
-  const { data } = await supabase
-    .from("stream_phases")
-    .select("*");
+  const { data, error } = await supabase
+    .from("stream_phase_master")
+    .select("id, name")
+    .order("name");
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
 
   streamPhaseSelect.innerHTML =
     `<option value="">-- Select Stream Phase --</option>`;
 
-  data?.forEach(p => {
+  data.forEach(p => {
     streamPhaseSelect.innerHTML +=
       `<option value="${p.id}">${p.name}</option>`;
   });
 }
 
 async function loadInspectionTechniques() {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("inspection_techniques")
-    .select("*");
+    .select("id, name")
+    .order("name");
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
 
   inspectionList.innerHTML = "";
 
-  data?.forEach(i => {
+  data.forEach(i => {
     inspectionList.innerHTML += `
       <label style="display:block">
         <input type="checkbox" value="${i.id}">
@@ -146,12 +164,16 @@ window.loadCircuits = async (systemId = window.activeLoopId) => {
   const { data, error } = await supabase
     .from('circuits')
     .select(`
-      *,
-      process_fluids(name),
-      stream_phases(name)
+      id,
+      circuit_name,
+      material,
+      operating_temp,
+      operating_pressure,
+      process_fluid_master ( name ),
+      stream_phase_master ( name )
     `)
     .eq('system_id', systemId)
-    .order('created_at', { ascending: true });
+    .order('created_at');
 
   if (error) {
     alert("Failed to load circuits: " + error.message);
@@ -175,8 +197,8 @@ window.loadCircuits = async (systemId = window.activeLoopId) => {
         Material: ${c.material}<br>
         Temp: ${c.operating_temp ?? "-"} °C |
         Pressure: ${c.operating_pressure ?? "-"} bar<br>
-        Process Fluid: ${c.process_fluids?.name ?? "NA"}<br>
-        Stream Phase: ${c.stream_phases?.name ?? "NA"}<br><br>
+        Process Fluid: ${c.process_fluid_master?.name ?? "NA"}<br>
+        Stream Phase: ${c.stream_phase_master?.name ?? "NA"}<br><br>
 
         <button onclick="selectCircuit('${c.id}')">
           Select Circuit
