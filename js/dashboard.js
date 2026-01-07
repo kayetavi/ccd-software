@@ -223,3 +223,41 @@ function hideSection(id) {
   const el = document.getElementById(id);
   if (el) el.style.display = "none";
 }
+
+
+
+
+window.updateProject = async () => {
+
+  if (!currentProjectId) {
+    alert("No active project");
+    return;
+  }
+
+  const plant = document.getElementById("plant").value.trim();
+  const unit = document.getElementById("unit").value.trim();
+
+  if (!plant || !unit) {
+    alert("Plant & Unit required");
+    return;
+  }
+
+  const { error } = await supabase
+    .from("ccd_projects")
+    .update({
+      plant_name: plant,
+      unit_name: unit
+    })
+    .eq("id", currentProjectId);
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  document.getElementById("projectStatus").innerText =
+    `Project Active: ${plant} – ${unit}`;
+
+  alert("✅ Project updated");
+};
+
