@@ -12,8 +12,8 @@ let currentUserRole = "viewer";
    CREATE PROJECT
 ================================ */
 window.createProject = async () => {
-  const plant = document.getElementById("plant").value.trim();
-  const unit = document.getElementById("unit").value.trim();
+  const plant = plantInput().value.trim();
+  const unit = unitInput().value.trim();
 
   if (!plant || !unit) {
     alert("Plant and Unit are required");
@@ -26,13 +26,13 @@ window.createProject = async () => {
     return;
   }
 
-  const { data, error } = await supabase
+  // 1️⃣ create project
+  const { data: project, error } = await supabase
     .from("ccd_projects")
     .insert({
       plant_name: plant,
       unit_name: unit,
-      user_id: user.id,
-      role: "admin" // creator = admin
+      user_id: user.id
     })
     .select()
     .single();
@@ -42,7 +42,14 @@ window.createProject = async () => {
     return;
   }
 
-  activateProject(data);
+  // 2️⃣ creator = admin
+  await supabase.from("project_users").insert({
+    project_id: project.id,
+    user_id: user.id,
+    role: "admin"
+  });
+
+  activateProject(project);
   loadProjectList();
 };
 
@@ -52,10 +59,10 @@ window.createProject = async () => {
 async function activateProject(project) {
   currentProjectId = project.id;
 
-  document.getElementById("plant").value = project.plant_name;
-  document.getElementById("unit").value = project.unit_name;
+  plantInput().value = project.plant_name;
+  unitInput().value = project.unit_name;
 
-  document.getElementById("projectStatus").innerText =
+  projectStatus().innerText =
     `Project Active: ${project.plant_name} – ${project.unit_name}`;
 
   await loadUserRole();
@@ -67,29 +74,27 @@ async function activateProject(project) {
 }
 
 /* ===============================
-   LOAD USER ROLE
+   LOAD USER ROLE (IMPORTANT)
 ================================ */
 async function loadUserRole() {
-  if (!currentProjectId) return;
-
   const { data, error } = await supabase
-    .from("ccd_projects")
+    .from("project_users")
     .select("role")
-    .eq("id", currentProjectId)
+    .eq("project_id", currentProjectId)
+    .eq("user_id", (await supabase.auth.getUser()).data.user.id)
     .single();
 
   currentUserRole = data?.role || "viewer";
 }
 
 /* ===============================
-   APPLY ROLE UI RULES
+   APPLY ROLE UI
 ================================ */
 function applyRoleUI() {
-  const updateBtn = document.querySelector("button[onclick='updateProject()']");
+  const updateBtn = document.getElementById("updateProjectBtn");
 
   if (currentUserRole === "viewer") {
     updateBtn.disabled = true;
-    updateBtn.title = "Viewer cannot update project";
     lockProjectInputs();
   } else {
     updateBtn.disabled = false;
@@ -98,25 +103,54 @@ function applyRoleUI() {
 }
 
 /* ===============================
+   UPDATE PROJECT
+================================ */
+window.updateProject = async () => {
+  if (currentUserRole === "viewer") {
+    alert("❌ Viewer cannot update project");
+    return;
+  }
+
+  const plant = plantInput().value.trim();
+  const unit = unitInput().value.trim();
+
+  const { error } = await supabase
+    .from("ccd_projects")
+    .update({ plant_name: plant, unit_name: unit })
+    .eq("id", currentProjectId);
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  projectStatus().innerText =
+    `Project Active: ${plant} – ${unit}`;
+
+  alert("✅ Project updated");
+};
+
+/* ===============================
    LOAD PROJECT LIST
 ================================ */
 window.loadProjectList = async () => {
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
 
   const { data } = await supabase
-    .from("ccd_projects")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
+    .from("project_users")
+    .select(`
+      project_id,
+      ccd_projects ( plant_name, unit_name )
+    `)
+    .eq("user_id", user.id);
 
   const select = document.getElementById("projectSelect");
   select.innerHTML = `<option value="">-- Select Project --</option>`;
 
   data.forEach(p => {
     select.innerHTML += `
-      <option value="${p.id}">
-        ${p.plant_name} – ${p.unit_name}
+      <option value="${p.project_id}">
+        ${p.ccd_projects.plant_name} – ${p.ccd_projects.unit_name}
       </option>`;
   });
 };
@@ -125,126 +159,38 @@ window.loadProjectList = async () => {
    SWITCH PROJECT
 ================================ */
 window.switchProject = async () => {
-  const projectId = document.getElementById("projectSelect").value;
-  if (!projectId) return;
+  const id = document.getElementById("projectSelect").value;
+  if (!id) return;
 
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("ccd_projects")
     .select("*")
-    .eq("id", projectId)
+    .eq("id", id)
     .single();
-
-  if (error) {
-    alert("Project not found");
-    return;
-  }
 
   activateProject(data);
 };
 
 /* ===============================
-   UPDATE PROJECT (ADMIN / EDITOR)
-================================ */
-window.updateProject = async () => {
-  if (!currentProjectId) {
-    alert("No active project");
-    return;
-  }
-
-  if (currentUserRole === "viewer") {
-    alert("❌ You don't have permission");
-    return;
-  }
-
-  const plant = document.getElementById("plant").value.trim();
-  const unit = document.getElementById("unit").value.trim();
-
-  const { error } = await supabase
-    .from("ccd_projects")
-    .update({
-      plant_name: plant,
-      unit_name: unit
-    })
-    .eq("id", currentProjectId);
-
-  if (error) {
-    alert(error.message);
-    return;
-  }
-
-  document.getElementById("projectStatus").innerText =
-    `Project Active: ${plant} – ${unit}`;
-
-  alert("✅ Project updated");
-};
-
-/* ===============================
-   LOAD CORROSION LOOPS
-================================ */
-window.loadSystems = async () => {
-  if (!currentProjectId) return;
-
-  const { data } = await supabase
-    .from("corrosion_systems")
-    .select("*")
-    .eq("project_id", currentProjectId);
-
-  const container = document.getElementById("systems");
-  container.innerHTML = data.length
-    ? data.map(loop => `
-        <div class="box">
-          <b>${loop.system_name}</b><br>
-          <small>${loop.process_description || ""}</small><br><br>
-          <button onclick="openLoop('${loop.id}')">OPEN</button>
-        </div>`).join("")
-    : "<i>No loops added yet</i>";
-};
-
-/* ===============================
-   OPEN LOOP
-================================ */
-window.openLoop = (loopId) => {
-  window.activeLoopId = loopId;
-  window.activeCircuitId = null;
-  openTab("circuitSection");
-  if (window.loadCircuits) window.loadCircuits(loopId);
-};
-
-/* ===============================
-   TAB CONTROL
-================================ */
-window.openTab = (id) => {
-  document.querySelectorAll("section.box")
-    .forEach(s => s.style.display = "none");
-  document.getElementById(id).style.display = "block";
-
-  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-  document.querySelector(`.tab[data-target="${id}"]`)?.classList.add("active");
-};
-
-/* ===============================
    HELPERS
 ================================ */
+function plantInput() { return document.getElementById("plant"); }
+function unitInput() { return document.getElementById("unit"); }
+function projectStatus() { return document.getElementById("projectStatus"); }
+
 function lockProjectInputs() {
-  plant.disabled = true;
-  unit.disabled = true;
+  plantInput().disabled = true;
+  unitInput().disabled = true;
 }
 
 function unlockProjectInputs() {
-  plant.disabled = false;
-  unit.disabled = false;
+  plantInput().disabled = false;
+  unitInput().disabled = false;
 }
 
 function resetLowerFlow() {
-  hide("loopSection");
-  hide("circuitSection");
-  hide("damageSection");
-  hide("reportSection");
-}
-
-function hide(id) {
-  const el = document.getElementById(id);
-  if (el) el.style.display = "none";
+  ["loopSection","circuitSection","damageSection","reportSection"]
+    .forEach(id => document.getElementById(id).style.display = "none");
 }
 
 /* ===============================
