@@ -22,7 +22,7 @@ window.generateReport = async () => {
   ================================ */
   const { data: project, error: pErr } = await supabase
     .from("ccd_projects")
-    .select("*")
+    .select("plant_name, unit_name")
     .eq("id", currentProjectId)
     .single();
 
@@ -32,7 +32,7 @@ window.generateReport = async () => {
   }
 
   /* ===============================
-     FETCH FULL STRUCTURE
+     FETCH LOOPS → CIRCUITS → DAMAGE
   ================================ */
   const { data: loops, error: lErr } = await supabase
     .from("corrosion_systems")
@@ -52,7 +52,7 @@ window.generateReport = async () => {
         )
       )
     `)
-    .eq("project_id", project.id)
+    .eq("project_id", currentProjectId)
     .order("created_at");
 
   if (lErr || !loops || loops.length === 0) {
@@ -61,7 +61,7 @@ window.generateReport = async () => {
   }
 
   /* ===============================
-     BUILD NERAL STYLE REPORT
+     BUILD REPORT
   ================================ */
   let html = `
     <div style="font-family:Arial;font-size:12px;color:#000">
@@ -78,21 +78,20 @@ window.generateReport = async () => {
       <hr>
   `;
 
-  loops.forEach((loop, i) => {
+  loops.forEach((loop, loopIndex) => {
+
+    const sectionNo = `7.${31 + loopIndex}`;
 
     html += `
       <h4>
-        ${7}.${i + 31}
-        Corrosion Loop: ${loop.system_name}
+        ${sectionNo} Corrosion Loop: ${loop.system_name}
       </h4>
 
       <b>a) Corrosion Loop Description</b>
-      <p>${loop.process_description || "—"}</p>
+      <p>${loop.process_description || "NA"}</p>
 
       <b>b) Corrosion Loop Process Description</b>
-      <p>${loop.process_description || "—"}</p>
-
-      <b>c) Operating Parameters</b>
+      <p>${loop.process_description || "NA"}</p>
     `;
 
     if (!loop.circuits || loop.circuits.length === 0) {
@@ -105,6 +104,7 @@ window.generateReport = async () => {
       const dms = circuit.circuit_damage_map || [];
 
       html += `
+        <b>c) Operating Parameters</b>
         <ul>
           <li>Operating Temperature: ${circuit.operating_temp ?? "Ambient"}</li>
           <li>Operating Pressure: ${circuit.operating_pressure ?? "NA"}</li>
@@ -123,6 +123,7 @@ window.generateReport = async () => {
         html += `<li>No Damage Mechanism Identified</li>`;
       } else {
         dms.forEach(dm => {
+          if (!dm.damage_mechanisms_master) return;
           html += `
             <li>
               ${dm.damage_mechanisms_master.name}
@@ -147,6 +148,9 @@ window.generateReport = async () => {
     html += `<hr>`;
   });
 
+  /* ===============================
+     FOOTER
+  ================================ */
   html += `
       <table style="width:100%;font-size:11px;margin-top:20px">
         <tr>
