@@ -2,7 +2,7 @@ import { supabase } from './supabase.js';
 import { currentProjectId } from './dashboard.js';
 
 /* ===============================
-   GENERATE CCD REPORT (FIXED)
+   GENERATE CCD REPORT (FINAL)
 ================================ */
 window.generateReport = async () => {
 
@@ -12,7 +12,6 @@ window.generateReport = async () => {
   reportSection.style.display = "block";
   reportDiv.innerHTML = "<i>Generating CCD report...</i>";
 
-  // 🔥 SAFE PROJECT ID
   const projectId =
     currentProjectId || localStorage.getItem("activeProjectId");
 
@@ -36,7 +35,7 @@ window.generateReport = async () => {
   }
 
   /* ===============================
-     FETCH FULL CCD STRUCTURE (FIXED JOINS)
+     FETCH FULL CCD STRUCTURE
   ================================ */
   const { data: loops, error: lErr } = await supabase
     .from("corrosion_systems")
@@ -53,6 +52,13 @@ window.generateReport = async () => {
 
         process_fluid_master ( name ),
         stream_phase_master ( name ),
+
+        circuit_constituents (
+          h2s,
+          co2,
+          o2,
+          chlorides
+        ),
 
         circuit_damage_map (
           damage_mechanisms_master (
@@ -123,6 +129,7 @@ window.generateReport = async () => {
 
       const dms = circuit.circuit_damage_map || [];
       const inspections = circuit.circuit_inspections || [];
+      const cc = circuit.circuit_constituents?.[0];
 
       html += `
         <b>c) Operating Parameters</b>
@@ -133,10 +140,18 @@ window.generateReport = async () => {
           <li>Stream Phase: ${circuit.stream_phase_master?.name ?? "NA"}</li>
         </ul>
 
-        <b>d) Material of Construction</b>
+        <b>d) Critical Process Constituents</b>
+        <table style="width:100%;border-collapse:collapse">
+          <tr><td>H2S</td><td>${cc?.h2s ?? "NA"}</td></tr>
+          <tr><td>CO2</td><td>${cc?.co2 ?? "NA"}</td></tr>
+          <tr><td>O2</td><td>${cc?.o2 ?? "NA"}</td></tr>
+          <tr><td>Chlorides</td><td>${cc?.chlorides ?? "NA"}</td></tr>
+        </table>
+
+        <b>e) Material of Construction</b>
         <p>${circuit.material || "NA"}</p>
 
-        <b>e) Primary Damage Mechanisms</b>
+        <b>f) Primary Damage Mechanisms</b>
         <ul>
       `;
 
@@ -157,7 +172,7 @@ window.generateReport = async () => {
       html += `
         </ul>
 
-        <b>f) Suggested Inspection Techniques</b>
+        <b>j) Suggested Inspection Techniques</b>
         <ul>
       `;
 
@@ -167,9 +182,7 @@ window.generateReport = async () => {
         inspections.forEach(i => {
           const tech = i.inspection_techniques_master;
           if (!tech) return;
-          html += `
-            <li>${tech.technique} (${tech.category})</li>
-          `;
+          html += `<li>${tech.technique} (${tech.category})</li>`;
         });
       }
 
@@ -200,8 +213,9 @@ window.generateReport = async () => {
   reportDiv.innerHTML = html;
 };
 
-
-
+/* ===============================
+   PDF DOWNLOAD
+================================ */
 window.downloadPDF = () => {
 
   const report = document.getElementById("ccdReport");
@@ -211,21 +225,11 @@ window.downloadPDF = () => {
     return;
   }
 
-  const opt = {
-    margin: [10, 10, 10, 10],
+  html2pdf().set({
+    margin: 10,
     filename: 'CCD_Report.pdf',
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: {
-      scale: 2,
-      useCORS: true
-    },
-    jsPDF: {
-      unit: 'mm',
-      format: 'a4',
-      orientation: 'portrait'
-    },
-    pagebreak: { mode: ['css', 'legacy'] }
-  };
-
-  html2pdf().set(opt).from(report).save();
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  }).from(report).save();
 };
