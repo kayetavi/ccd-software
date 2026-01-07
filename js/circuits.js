@@ -13,63 +13,55 @@ const processFluidSelect = document.getElementById("processFluidSelect");
 const streamPhaseSelect = document.getElementById("streamPhaseSelect");
 const inspectionList = document.getElementById("inspectionList");
 
+/* ---- Constituents ---- */
+const h2s = document.getElementById("h2s");
+const co2 = document.getElementById("co2");
+const o2 = document.getElementById("o2");
+const chlorides = document.getElementById("chlorides");
+const constituentStatus = document.getElementById("constituentStatus");
+
 /* ===============================
    LOAD MASTER DATA
 ================================ */
 async function loadProcessFluids() {
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("process_fluid_master")
     .select("id, name")
     .order("name");
 
-  if (error) {
-    alert(error.message);
-    return;
-  }
-
   processFluidSelect.innerHTML =
     `<option value="">-- Select Process Fluid --</option>`;
 
-  data.forEach(f => {
+  data?.forEach(f => {
     processFluidSelect.innerHTML +=
       `<option value="${f.id}">${f.name}</option>`;
   });
 }
 
 async function loadStreamPhases() {
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("stream_phase_master")
     .select("id, name")
     .order("name");
 
-  if (error) {
-    alert(error.message);
-    return;
-  }
-
   streamPhaseSelect.innerHTML =
     `<option value="">-- Select Stream Phase --</option>`;
 
-  data.forEach(p => {
+  data?.forEach(p => {
     streamPhaseSelect.innerHTML +=
       `<option value="${p.id}">${p.name}</option>`;
   });
 }
 
 async function loadInspectionTechniques() {
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("inspection_techniques_master")
     .select("id, technique, category")
     .order("technique");
 
-  if (error) {
-    alert(error.message);
-    return;
-  }
-
   inspectionList.innerHTML = "";
 
-  data.forEach(i => {
+  data?.forEach(i => {
     inspectionList.innerHTML += `
       <label style="display:block">
         <input type="checkbox" value="${i.id}">
@@ -84,75 +76,47 @@ async function loadInspectionTechniques() {
 ================================ */
 window.addCircuit = async () => {
 
-  const systemId = window.activeLoopId;
-  if (!systemId) {
+  if (!window.activeLoopId) {
     alert("Please select a corrosion loop first");
     return;
   }
 
-  const name = circuitName.value.trim();
-  const mat = material.value.trim();
-  const t = temp.value.trim();
-  const p = pressure.value.trim();
-
-  const processFluidId = processFluidSelect.value;
-  const streamPhaseId = streamPhaseSelect.value;
-
-  const selectedInspections = [
-    ...inspectionList.querySelectorAll("input:checked")
-  ].map(i => i.value);
-
-  if (!name || !mat) {
-    alert("Circuit name and material are required");
-    return;
-  }
-
-  if (!processFluidId || !streamPhaseId) {
-    alert("Please select Process Fluid and Stream Phase");
-    return;
-  }
-
-  /* === INSERT CIRCUIT === */
   const { data: circuit, error } = await supabase
     .from('circuits')
     .insert({
-      system_id: systemId,
-      circuit_name: name,
-      material: mat,
-      operating_temp: t || null,
-      operating_pressure: p || null,
-      process_fluid_id: processFluidId,
-      stream_phase_id: streamPhaseId
+      system_id: window.activeLoopId,
+      circuit_name: circuitName.value.trim(),
+      material: material.value.trim(),
+      operating_temp: temp.value || null,
+      operating_pressure: pressure.value || null,
+      process_fluid_id: processFluidSelect.value,
+      stream_phase_id: streamPhaseSelect.value
     })
     .select()
     .single();
 
   if (error) {
-    alert("Failed to add circuit: " + error.message);
+    alert(error.message);
     return;
   }
 
-  /* === INSERT INSPECTION TECHNIQUES === */
-  for (const inspId of selectedInspections) {
+  /* inspections */
+  const selectedInspections =
+    [...inspectionList.querySelectorAll("input:checked")]
+      .map(i => i.value);
+
+  for (const id of selectedInspections) {
     await supabase.from("circuit_inspections").insert({
       circuit_id: circuit.id,
-      inspection_technique_id: inspId
+      inspection_technique_id: id
     });
   }
 
-  /* === RESET FORM === */
-  circuitName.value = "";
-  material.value = "";
-  temp.value = "";
-  pressure.value = "";
-  processFluidSelect.value = "";
-  streamPhaseSelect.value = "";
+  circuitName.value = material.value = temp.value = pressure.value = "";
+  processFluidSelect.value = streamPhaseSelect.value = "";
+  inspectionList.querySelectorAll("input").forEach(i => i.checked = false);
 
-  inspectionList
-    .querySelectorAll("input")
-    .forEach(i => i.checked = false);
-
-  loadCircuits(systemId);
+  loadCircuits(window.activeLoopId);
 };
 
 /* ===============================
@@ -160,9 +124,7 @@ window.addCircuit = async () => {
 ================================ */
 window.loadCircuits = async (systemId = window.activeLoopId) => {
 
-  if (!systemId || !circuits) return;
-
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from('circuits')
     .select(`
       id,
@@ -176,23 +138,8 @@ window.loadCircuits = async (systemId = window.activeLoopId) => {
     .eq('system_id', systemId)
     .order('created_at');
 
-  if (error) {
-    alert("Failed to load circuits: " + error.message);
-    return;
-  }
-
-  circuits.innerHTML = "";
-
-  const damageSection = document.getElementById("damageSection");
-  if (damageSection) damageSection.style.display = "none";
-
-  if (!data || data.length === 0) {
-    circuits.innerHTML = "<i>No circuits added yet</i>";
-    return;
-  }
-
-  data.forEach(c => {
-    circuits.innerHTML += `
+  circuits.innerHTML = data?.length
+    ? data.map(c => `
       <div class="box">
         <b>${c.circuit_name}</b><br>
         Material: ${c.material}<br>
@@ -200,30 +147,60 @@ window.loadCircuits = async (systemId = window.activeLoopId) => {
         Pressure: ${c.operating_pressure ?? "-"} bar<br>
         Process Fluid: ${c.process_fluid_master?.name ?? "NA"}<br>
         Stream Phase: ${c.stream_phase_master?.name ?? "NA"}<br><br>
-
-        <button onclick="selectCircuit('${c.id}')">
-          Select Circuit
-        </button>
+        <button onclick="selectCircuit('${c.id}')">Select Circuit</button>
       </div>
-    `;
-  });
+    `).join("")
+    : "<i>No circuits added yet</i>";
 };
 
 /* ===============================
    SELECT CIRCUIT
 ================================ */
-window.selectCircuit = (circuitId) => {
-  if (!circuitId) return;
+window.selectCircuit = async (circuitId) => {
 
   window.activeCircuitId = circuitId;
 
-  if (window.openTab) {
-    window.openTab("damageSection");
+  /* LOAD CONSTITUENTS */
+  const { data } = await supabase
+    .from("circuit_constituents")
+    .select("*")
+    .eq("circuit_id", circuitId)
+    .single();
+
+  h2s.value = data?.h2s ?? "";
+  co2.value = data?.co2 ?? "";
+  o2.value = data?.o2 ?? "";
+  chlorides.value = data?.chlorides ?? "";
+
+  window.openTab("damageSection");
+  window.selectCircuitForDamage?.(circuitId);
+};
+
+/* ===============================
+   SAVE CONSTITUENTS
+================================ */
+window.saveConstituents = async () => {
+
+  if (!window.activeCircuitId) {
+    alert("Select circuit first");
+    return;
   }
 
-  if (window.selectCircuitForDamage) {
-    window.selectCircuitForDamage(circuitId);
-  }
+  const payload = {
+    circuit_id: window.activeCircuitId,
+    h2s: h2s.value || null,
+    co2: co2.value || null,
+    o2: o2.value || null,
+    chlorides: chlorides.value || null
+  };
+
+  const { error } = await supabase
+    .from("circuit_constituents")
+    .upsert(payload, { onConflict: "circuit_id" });
+
+  constituentStatus.innerText = error
+    ? error.message
+    : "✅ Constituents saved";
 };
 
 /* ===============================
