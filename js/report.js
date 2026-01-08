@@ -76,7 +76,7 @@ window.generateReport = async () => {
       )
     `)
     .eq("project_id", projectId)
-    .order("created_at", { ascending: true });
+    .order("created_at");
 
   if (lErr) {
     reportDiv.innerHTML = `❌ ${lErr.message}`;
@@ -125,27 +125,39 @@ window.generateReport = async () => {
       return;
     }
 
-    loop.circuits.forEach(circuit => {
+    loop.circuits.forEach((circuit, idx) => {
 
       const dms = circuit.circuit_damage_map || [];
       const inspections = circuit.circuit_inspections || [];
-      const cc = circuit.circuit_constituents?.[0];
+      const cc = circuit.circuit_constituents?.[0] || {};
 
       html += `
+        <h5 style="margin-top:15px">
+          Circuit ${idx + 1}: ${circuit.circuit_name}
+        </h5>
+
         <b>c) Operating Parameters</b>
         <ul>
-          <li>Operating Temperature: ${circuit.operating_temp ?? "NA"}</li>
-          <li>Operating Pressure: ${circuit.operating_pressure ?? "NA"}</li>
+          <li>Operating Temperature: ${circuit.operating_temp ?? "NA"} °C</li>
+          <li>Operating Pressure: ${circuit.operating_pressure ?? "NA"} bar</li>
           <li>Process Fluid: ${circuit.process_fluid_master?.name ?? "NA"}</li>
           <li>Stream Phase: ${circuit.stream_phase_master?.name ?? "NA"}</li>
         </ul>
 
         <b>d) Critical Process Constituents</b>
-        <table style="width:100%;border-collapse:collapse">
-          <tr><td>H2S</td><td>${cc?.h2s ?? "NA"}</td></tr>
-          <tr><td>CO2</td><td>${cc?.co2 ?? "NA"}</td></tr>
-          <tr><td>O2</td><td>${cc?.o2 ?? "NA"}</td></tr>
-          <tr><td>Chlorides</td><td>${cc?.chlorides ?? "NA"}</td></tr>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:10px">
+          <tr>
+            <td>H2S</td><td>${cc.h2s ?? "NA"}</td>
+          </tr>
+          <tr>
+            <td>CO2</td><td>${cc.co2 ?? "NA"}</td>
+          </tr>
+          <tr>
+            <td>O2</td><td>${cc.o2 ?? "NA"}</td>
+          </tr>
+          <tr>
+            <td>Chlorides</td><td>${cc.chlorides ?? "NA"}</td>
+          </tr>
         </table>
 
         <b>e) Material of Construction</b>
