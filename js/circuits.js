@@ -13,7 +13,7 @@ const processFluidSelect = document.getElementById("processFluidSelect");
 const streamPhaseSelect = document.getElementById("streamPhaseSelect");
 const inspectionList = document.getElementById("inspectionList");
 
-/* ---- Constituents ---- */
+/* ---- Critical Process Constituents ---- */
 const h2s = document.getElementById("h2s");
 const co2 = document.getElementById("co2");
 const o2 = document.getElementById("o2");
@@ -24,44 +24,50 @@ const constituentStatus = document.getElementById("constituentStatus");
    LOAD MASTER DATA
 ================================ */
 async function loadProcessFluids() {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("process_fluid_master")
     .select("id, name")
     .order("name");
 
+  if (error) return alert(error.message);
+
   processFluidSelect.innerHTML =
     `<option value="">-- Select Process Fluid --</option>`;
 
-  data?.forEach(f => {
+  data.forEach(f => {
     processFluidSelect.innerHTML +=
       `<option value="${f.id}">${f.name}</option>`;
   });
 }
 
 async function loadStreamPhases() {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("stream_phase_master")
     .select("id, name")
     .order("name");
 
+  if (error) return alert(error.message);
+
   streamPhaseSelect.innerHTML =
     `<option value="">-- Select Stream Phase --</option>`;
 
-  data?.forEach(p => {
+  data.forEach(p => {
     streamPhaseSelect.innerHTML +=
       `<option value="${p.id}">${p.name}</option>`;
   });
 }
 
 async function loadInspectionTechniques() {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("inspection_techniques_master")
     .select("id, technique, category")
     .order("technique");
 
+  if (error) return alert(error.message);
+
   inspectionList.innerHTML = "";
 
-  data?.forEach(i => {
+  data.forEach(i => {
     inspectionList.innerHTML += `
       <label style="display:block">
         <input type="checkbox" value="${i.id}">
@@ -77,12 +83,17 @@ async function loadInspectionTechniques() {
 window.addCircuit = async () => {
 
   if (!window.activeLoopId) {
-    alert("Please select a corrosion loop first");
+    alert("❌ Select corrosion loop first");
+    return;
+  }
+
+  if (!circuitName.value || !material.value) {
+    alert("❌ Circuit name & material required");
     return;
   }
 
   const { data: circuit, error } = await supabase
-    .from('circuits')
+    .from("circuits")
     .insert({
       system_id: window.activeLoopId,
       circuit_name: circuitName.value.trim(),
@@ -100,7 +111,7 @@ window.addCircuit = async () => {
     return;
   }
 
-  /* inspections */
+  /* SAVE INSPECTION TECHNIQUES */
   const selectedInspections =
     [...inspectionList.querySelectorAll("input:checked")]
       .map(i => i.value);
@@ -112,8 +123,13 @@ window.addCircuit = async () => {
     });
   }
 
-  circuitName.value = material.value = temp.value = pressure.value = "";
-  processFluidSelect.value = streamPhaseSelect.value = "";
+  /* RESET FORM */
+  circuitName.value = "";
+  material.value = "";
+  temp.value = "";
+  pressure.value = "";
+  processFluidSelect.value = "";
+  streamPhaseSelect.value = "";
   inspectionList.querySelectorAll("input").forEach(i => i.checked = false);
 
   loadCircuits(window.activeLoopId);
@@ -124,8 +140,10 @@ window.addCircuit = async () => {
 ================================ */
 window.loadCircuits = async (systemId = window.activeLoopId) => {
 
-  const { data } = await supabase
-    .from('circuits')
+  if (!systemId) return;
+
+  const { data, error } = await supabase
+    .from("circuits")
     .select(`
       id,
       circuit_name,
@@ -135,10 +153,12 @@ window.loadCircuits = async (systemId = window.activeLoopId) => {
       process_fluid_master ( name ),
       stream_phase_master ( name )
     `)
-    .eq('system_id', systemId)
-    .order('created_at');
+    .eq("system_id", systemId)
+    .order("created_at");
 
-  circuits.innerHTML = data?.length
+  if (error) return alert(error.message);
+
+  circuits.innerHTML = data.length
     ? data.map(c => `
       <div class="box">
         <b>${c.circuit_name}</b><br>
@@ -147,7 +167,9 @@ window.loadCircuits = async (systemId = window.activeLoopId) => {
         Pressure: ${c.operating_pressure ?? "-"} bar<br>
         Process Fluid: ${c.process_fluid_master?.name ?? "NA"}<br>
         Stream Phase: ${c.stream_phase_master?.name ?? "NA"}<br><br>
-        <button onclick="selectCircuit('${c.id}')">Select Circuit</button>
+        <button onclick="selectCircuit('${c.id}')">
+          Select Circuit
+        </button>
       </div>
     `).join("")
     : "<i>No circuits added yet</i>";
@@ -163,7 +185,7 @@ window.selectCircuit = async (circuitId) => {
   /* LOAD CONSTITUENTS */
   const { data } = await supabase
     .from("circuit_constituents")
-    .select("*")
+    .select("h2s, co2, o2, chlorides")
     .eq("circuit_id", circuitId)
     .single();
 
@@ -182,7 +204,7 @@ window.selectCircuit = async (circuitId) => {
 window.saveConstituents = async () => {
 
   if (!window.activeCircuitId) {
-    alert("Select circuit first");
+    alert("❌ Select circuit first");
     return;
   }
 
@@ -199,8 +221,8 @@ window.saveConstituents = async () => {
     .upsert(payload, { onConflict: "circuit_id" });
 
   constituentStatus.innerText = error
-    ? error.message
-    : "✅ Constituents saved";
+    ? `❌ ${error.message}`
+    : "✅ Constituents saved successfully";
 };
 
 /* ===============================
