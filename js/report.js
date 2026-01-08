@@ -2,7 +2,7 @@ import { supabase } from './supabase.js';
 import { currentProjectId } from './dashboard.js';
 
 /* ===============================
-   GENERATE CCD REPORT (FINAL)
+   GENERATE CCD REPORT (LOOP LEVEL CONSTITUENTS)
 ================================ */
 window.generateReport = async () => {
 
@@ -43,6 +43,14 @@ window.generateReport = async () => {
       id,
       system_name,
       process_description,
+
+      loop_constituents (
+        h2s,
+        co2,
+        o2,
+        chlorides
+      ),
+
       circuits (
         id,
         circuit_name,
@@ -52,13 +60,6 @@ window.generateReport = async () => {
 
         process_fluid_master ( name ),
         stream_phase_master ( name ),
-
-        circuit_constituents (
-          h2s,
-          co2,
-          o2,
-          chlorides
-        ),
 
         circuit_damage_map (
           damage_mechanisms_master (
@@ -109,6 +110,7 @@ window.generateReport = async () => {
   loops.forEach((loop, loopIndex) => {
 
     const sectionNo = `7.${31 + loopIndex}`;
+    const lc = loop.loop_constituents?.[0] || {};
 
     html += `
       <h4>${sectionNo} Corrosion Loop: ${loop.system_name}</h4>
@@ -118,6 +120,14 @@ window.generateReport = async () => {
 
       <b>b) Corrosion Loop Process Description</b>
       <p>${loop.process_description || "NA"}</p>
+
+      <b>c) Critical Process Constituents</b>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:10px">
+        <tr><td>H2S</td><td>${lc.h2s ?? "NA"}</td></tr>
+        <tr><td>CO2</td><td>${lc.co2 ?? "NA"}</td></tr>
+        <tr><td>O2</td><td>${lc.o2 ?? "NA"}</td></tr>
+        <tr><td>Chlorides</td><td>${lc.chlorides ?? "NA"}</td></tr>
+      </table>
     `;
 
     if (!loop.circuits || loop.circuits.length === 0) {
@@ -129,36 +139,19 @@ window.generateReport = async () => {
 
       const dms = circuit.circuit_damage_map || [];
       const inspections = circuit.circuit_inspections || [];
-      const cc = circuit.circuit_constituents?.[0] || {};
 
       html += `
-        <h5 style="margin-top:15px">
+        <h5 style="margin-top:12px">
           Circuit ${idx + 1}: ${circuit.circuit_name}
         </h5>
 
-        <b>c) Operating Parameters</b>
+        <b>d) Operating Parameters</b>
         <ul>
           <li>Operating Temperature: ${circuit.operating_temp ?? "NA"} °C</li>
           <li>Operating Pressure: ${circuit.operating_pressure ?? "NA"} bar</li>
           <li>Process Fluid: ${circuit.process_fluid_master?.name ?? "NA"}</li>
           <li>Stream Phase: ${circuit.stream_phase_master?.name ?? "NA"}</li>
         </ul>
-
-        <b>d) Critical Process Constituents</b>
-        <table style="width:100%;border-collapse:collapse;margin-bottom:10px">
-          <tr>
-            <td>H2S</td><td>${cc.h2s ?? "NA"}</td>
-          </tr>
-          <tr>
-            <td>CO2</td><td>${cc.co2 ?? "NA"}</td>
-          </tr>
-          <tr>
-            <td>O2</td><td>${cc.o2 ?? "NA"}</td>
-          </tr>
-          <tr>
-            <td>Chlorides</td><td>${cc.chlorides ?? "NA"}</td>
-          </tr>
-        </table>
 
         <b>e) Material of Construction</b>
         <p>${circuit.material || "NA"}</p>
