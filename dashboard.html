@@ -50,48 +50,18 @@
 
       <input id="systemName" placeholder="Loop / System Name">
       <textarea id="systemDesc" placeholder="Process description"></textarea>
-      <button onclick="addSystem()">Add Loop</button>
+      <button onclick="addSystem()">➕ Add Loop</button>
 
       <div id="systems"></div>
-    </section>
-
-    <!-- ================= CIRCUITS ================= -->
-    <section id="circuitSection" class="box" style="display:none">
-      <h3>Circuits</h3>
-
-      <!-- ADD CIRCUIT -->
-      <h4>Add New Circuit</h4>
-
-      <input id="circuitName" placeholder="Circuit Name">
-      <input id="material" placeholder="Material">
-      <input id="temp" placeholder="Temp (°C)">
-      <input id="pressure" placeholder="Pressure (bar)">
-
-      <label><b>Process Fluid</b></label>
-      <select id="processFluidSelect"></select>
-
-      <label><b>Stream Phase</b></label>
-      <select id="streamPhaseSelect"></select>
-
-      <label><b>Inspection Techniques</b></label>
-      <div id="inspectionList"></div>
-
-      <button onclick="addCircuit()">➕ Add Circuit</button>
 
       <hr>
 
-      <!-- CIRCUIT LIST -->
-      <h4>Existing Circuits</h4>
-      <div id="circuits"></div>
-
-      <hr>
-
-      <!-- ================= CONSTITUENTS ================= -->
-      <h4>d) Critical Process Constituents</h4>
+      <!-- ✅ LOOP LEVEL CONSTITUENTS -->
+      <h4>d) Critical Process Constituents (Loop Level)</h4>
 
       <p style="color:#555">
-        <b>Selected Circuit:</b>
-        <span id="activeCircuitLabel">None</span>
+        <b>Selected Loop:</b>
+        <span id="activeLoopLabel">None</span>
       </p>
 
       <table style="width:100%">
@@ -113,9 +83,37 @@
         </tr>
       </table>
 
-      <button onclick="saveConstituents()">💾 Save Constituents</button>
+      <button onclick="saveLoopConstituents()">💾 Save Constituents</button>
       <div id="constituentStatus" style="margin-top:5px;font-weight:bold"></div>
 
+    </section>
+
+    <!-- ================= CIRCUITS ================= -->
+    <section id="circuitSection" class="box" style="display:none">
+      <h3>Circuits</h3>
+
+      <h4>Add New Circuit</h4>
+
+      <input id="circuitName" placeholder="Circuit Name">
+      <input id="material" placeholder="Material">
+      <input id="temp" placeholder="Temp (°C)">
+      <input id="pressure" placeholder="Pressure (bar)">
+
+      <label><b>Process Fluid</b></label>
+      <select id="processFluidSelect"></select>
+
+      <label><b>Stream Phase</b></label>
+      <select id="streamPhaseSelect"></select>
+
+      <label><b>Inspection Techniques</b></label>
+      <div id="inspectionList"></div>
+
+      <button onclick="addCircuit()">➕ Add Circuit</button>
+
+      <hr>
+
+      <h4>Existing Circuits</h4>
+      <div id="circuits"></div>
     </section>
 
     <!-- ================= DAMAGE ================= -->
@@ -154,6 +152,7 @@
 <!-- ================= SCRIPTS ================= -->
 <script type="module" src="js/dashboard.js"></script>
 <script type="module" src="js/systems.js"></script>
+<script type="module" src="js/loop_constituents.js"></script>
 <script type="module" src="js/circuits.js"></script>
 <script type="module" src="js/damage.js"></script>
 <script type="module" src="js/report.js"></script>
